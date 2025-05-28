@@ -18,12 +18,15 @@ activate web_app
             customer -> web_app:tap cart icon
         end alt
         web_app -> database:GET api/v1/carts
+        web_app -> database:GET api/v1/stocks
         database --> web_app: cart(attributes)
     deactivate database
     web_app --> customer:cart view
     group customer_edit_cart_quantity
         customer -> web_app:tap plus icon
         activate database
+            web_app -> database:GET api/v1/stocks/{productId}
+            database --> web_app:stocks(quantity)
             web_app -> database:PATCH api/v1/carts/incQuantity/{productId}
             web_app -> database:GET api/v1/carts
             database --> web_app:cart(attribute)
@@ -32,6 +35,7 @@ activate web_app
         alt decrease_product_quantity
             customer -> web_app:tap minus icon
         activate database
+            web_app -> database:GET api/v1/carts/decQuantity/{productId}
             web_app -> database:PATCH api/v1/carts/decQuantity/{productId}
             web_app -> database:GET api/v1/carts
             database --> web_app:cart(attribute)

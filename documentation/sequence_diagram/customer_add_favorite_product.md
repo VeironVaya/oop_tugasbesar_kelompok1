@@ -4,7 +4,8 @@
 @startuml
 title Customer Add Favorite
 Actor customer
-Entity web_app
+Entity frontend
+Entity backend
 Database database
 
 group Customer Add Favorite
