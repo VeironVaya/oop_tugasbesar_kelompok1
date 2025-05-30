@@ -597,3 +597,66 @@ SELECT
   ) AS full_response;
 
 ```
+
+## 6. Customer Searh Product
+
+### 1.1. search product
+
+#### Endpoint: /api/v1/products
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  "keyword": "Shirt"
+}
+```
+
+```json
+{
+  "keyword": "Fresh Fish"
+}
+```
+
+#### Response Body:
+
+```json
+{
+  "status": "true",
+  "message": "berhasil mencari data",
+  "data": [
+    {
+      "idProduct": "prod-001",
+      "name": "Ralph Lauren White Polo Shirt",
+      "description": "Classic white polo shirt made from premium cotton.",
+      "price": 785000,
+      "category": "topWear"
+    },
+    {
+      "idProduct": "prod-002",
+      "name": "Uniqlo Slim Fit T-Shirt",
+      "description": "Basic slim fit t-shirt for daily wear.",
+      "price": 345000,
+      "category": "topWear"
+    }
+  ]
+}
+```
+
+```json
+{
+  "status": "true",
+  "message": "berhasil mencari data",
+  "data": []
+}
+```
+
+#### Query:
+
+```sql
+
+```
