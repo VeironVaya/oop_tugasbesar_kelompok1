@@ -1,5 +1,7 @@
 # Stylow Restful API
 
+# CUSTOMER
+
 ## 1. Customer Authentication
 
 ### 1.1.
@@ -655,6 +657,70 @@ X-API-TOKEN : Token (mandatory)
   "message": "berhasil mencari data",
   "data": []
 }
+```
+
+#### Query:
+
+```sql
+
+```
+
+# ADMIN
+
+## 1. Admin Authentication
+
+### 1.1.
+
+#### Endpoint:
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  -
+}
+```
+
+#### Response Body:
+
+```json
+{}
+```
+
+#### Query:
+
+```sql
+
+```
+
+## 2. Admin Product List and Product Detail
+
+![alt text](image-7.png)
+
+### 2.1. Product List
+
+#### Endpoint:
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  -
+}
+```
+
+#### Response Body:
+
+```json
+{}
 ```
 
 #### Query:
