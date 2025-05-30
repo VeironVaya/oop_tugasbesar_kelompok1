@@ -600,9 +600,11 @@ SELECT
 
 ## 6. Customer Searh Product
 
-### 1.1. search product
+![alt text](image-6.png)
 
-#### Endpoint: /api/v1/products
+### 6.1. search product
+
+#### Endpoint: GET /api/v1/search/products
 
 #### Request Header:
 
