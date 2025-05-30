@@ -1,8 +1,8 @@
-![alt text](image-8.png)
+![alt text](image-10.png)
 
 ```plantuml
 @startuml
-title REGISTRATION
+title CUSTOMER REGISTRATION
 Actor customer
 Entity front_end
 Entity back_end
@@ -36,10 +36,11 @@ end group
 @enduml
 ```
 
-![alt text](image-7.png)
+![alt text](image-11.png)
 
 ```plantuml
 @startuml
+title CUSTOMER LOGIN
 Actor customer
 Entity front_end
 Entity back_end
@@ -70,22 +71,27 @@ deactivate database
         deactivate front_end
         deactivate back_end
     end alt
+end group
 @enduml
 ```
 
-![alt text](image-9.png)
+![alt text](image-12.png)
 
 ```plantuml
 @startuml
+title CUSTOMER LOGOUT
 Actor customer
 Entity front_end
 Entity back_end
 Database database
+
+group customer_logout
 
 customer -> front_end: tap logout button
 activate front_end
     front_end --> front_end: remove token (local storage)
     front_end --> customer: redirect to login page
 deactivate front_end
+end group
 @enduml
 ```

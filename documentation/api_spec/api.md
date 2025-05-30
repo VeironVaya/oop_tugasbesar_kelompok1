@@ -4,32 +4,82 @@
 
 ## 1. Customer Authentication
 
-### 1.1.
+### 1.1. Registration
 
-#### Endpoint:
+#### Endpoint: POST /api/v1/customers/
 
-#### Request Header:
-
-X-API-TOKEN : Token (mandatory)
+#### Request Header: None
 
 #### Request Body:
 
 ```json
 {
-  -
+  "username": "Muhammad Veiron Ramadhan",
+  "password": "Pass123*"
 }
 ```
 
 #### Response Body:
 
 ```json
-{}
+{
+  "status": true,
+  "message": "Registration success",
+  "username": "Muhammad Veiron Ramadhan"
+}
 ```
 
-#### Query:
+#### Query (check username):
 
 ```sql
+SELECT COUNT(*) AS cnt
+FROM customers
+WHERE username = ?;
+```
 
+### Query (insert username & password)
+
+```sql
+INSERT INTO customers (username, password_hash)
+VALUES (?, ?);
+```
+
+### 1.2. Login
+
+#### Endpoint: POST /api/v1/auth/login
+
+#### Request Header: None
+
+#### Request Body:
+
+```json
+{
+  "username": "Muhammad Veiron Ramadhan",
+  "password": "Pass123*"
+}
+```
+
+#### Response Body:
+
+```json
+{
+  "status": true,
+  "message": "Login success",
+  "data": {
+    "token": "05072151-1c79-48de-b1bb-2d5eaf6f1912",
+    "expiredAt": 1734404530947
+  }
+}
+```
+
+#### Query (check username & password):
+
+```sql
+SELECT customer_id,
+       username,
+       password_hash
+FROM customers
+WHERE username = ?
 ```
 
 ## 2. Customer Product List include Category
@@ -669,32 +719,42 @@ X-API-TOKEN : Token (mandatory)
 
 ## 1. Admin Authentication
 
-### 1.1.
+### 1.1. Login
 
-#### Endpoint:
+#### Endpoint: POST /api/v1/auth/login
 
-#### Request Header:
-
-X-API-TOKEN : Token (mandatory)
+#### Request Header: None
 
 #### Request Body:
 
 ```json
 {
-  -
+  "username": "Admin",
+  "password": "Admin123*"
 }
 ```
 
 #### Response Body:
 
 ```json
-{}
+{
+  "status": true,
+  "message": "Login success",
+  "data": {
+    "token": "05072151-1c79-48de-b1bb-2d5eaf6f1912",
+    "expiredAt": 1734404530947
+  }
+}
 ```
 
-#### Query:
+#### Query (check username & password):
 
 ```sql
-
+SELECT customer_id,
+       username,
+       password_hash
+FROM customers
+WHERE username = ?
 ```
 
 ## 2. Admin Product List and Product Detail
