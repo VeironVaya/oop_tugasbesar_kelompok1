@@ -88,11 +88,11 @@ FROM products
 WHERE (:category IS NULL OR category = :category);
 ```
 
-## 3. Customer Product Details Include Favorite
+## 3. Customer Product Details include Favorite
 
 ### 3.1. Get product detail information
 
-#### Endpoint: GET api/v1/products/{productId}/customer/{customerId}
+#### Endpoint: GET /api/v1/products/{productId}/customer/{customerId}
 
 #### Request Header:
 
@@ -160,7 +160,7 @@ LIMIT 1;
 
 ### 3.2. add favorite product
 
-#### Endpoint: POST api/v1/products/{productId}/customer/{customerId}/favorites
+#### Endpoint: POST /api/v1/products/{productId}/customer/{customerId}/favorites
 
 #### Request Header:
 
@@ -193,7 +193,7 @@ VALUES (:productId, :customerId);
 
 ### 3.1. remove favorite product
 
-#### Endpoint: DELETE api/v1/products/{productId}/customer/{customerId}/favorites
+#### Endpoint: DELETE /api/v1/products/{productId}/customer/{customerId}/favorites
 
 #### Request Header:
 
@@ -222,4 +222,34 @@ X-API-TOKEN : Token (mandatory)
 ```sql
 DELETE FROM FavoriteProduct
 WHERE idProduct = :productId AND idCustomer = :customerId;
+```
+
+## 4. Customer Authentication
+
+### 4.1.
+
+#### Endpoint:
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  -
+}
+```
+
+#### Response Body:
+
+```json
+{}
+```
+
+#### Query:
+
+```sql
+
 ```
