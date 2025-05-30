@@ -224,11 +224,13 @@ DELETE FROM FavoriteProduct
 WHERE idProduct = :productId AND idCustomer = :customerId;
 ```
 
-## 4. Customer Authentication
+## 4. Customer Cart CRUD
 
-### 4.1.
+### 4.1. add to product to cart
 
-#### Endpoint:
+![alt text](image-4.png)
+
+#### Endpoint: POST /api/v1/carts/{productId}
 
 #### Request Header:
 
@@ -245,11 +247,58 @@ X-API-TOKEN : Token (mandatory)
 #### Response Body:
 
 ```json
-{}
+{
+  "status": true,
+  "message": "item successfully added to cart",
+  "cartTotalPrice": 1130000
+  "data" : [
+    {
+      {
+      "idCartItem": "item-001",
+      "name": "Ralph Lauren White Polo Shirt",
+      "description": "Classic white polo shirt made from premium cotton.",
+      "price": 785000,
+      "category": "topWear",
+    },
+    {
+      "idCartItem": "item-002",
+      "name": "Uniqlo Slim Fit T-Shirt",
+      "description": "Basic slim fit t-shirt for daily wear.",
+      "price": 345000,
+      "category": "topWear",
+    }
+    }
+
+  ]
+
+}
 ```
 
 #### Query:
 
 ```sql
+-- Insert a product into the cart with quantity = 1
+INSERT INTO cart_items (cart_item_id, user_id, product_id, quantity)
+VALUES ('item-002, 'user-123', 'product-002', 1);
+```
 
+```sql
+SELECT
+    ci.cart_item_id AS "idCartItem",
+    p.name,
+    p.description,
+    p.price,
+    p.category,
+    ci.quantity,
+FROM cart_items ci
+JOIN products p ON ci.product_id = p.product_id
+WHERE ci.user_id = 'user-123';
+```
+
+```sql
+SELECT
+    SUM(p.price * ci.quantity) AS cartTotalPrice
+FROM cart_items ci
+JOIN products p ON ci.product_id = p.product_id
+WHERE ci.user_id = 'user-123';
 ```
