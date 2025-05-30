@@ -720,6 +720,15 @@ X-API-TOKEN : Token (mandatory)
 #### Query:
 
 ```sql
+SELECT
+  id_product    AS idProduct,
+  name,
+  description,
+  price,
+  category
+FROM products
+WHERE name        LIKE CONCAT('%', :keyword, '%')
+   OR description LIKE CONCAT('%', :keyword, '%');
 
 ```
 
@@ -777,7 +786,7 @@ WHERE username = ?
 
 ### 2.1. Product List
 
-#### Endpoint:
+#### Endpoint: GET /api/products?category={category}
 
 #### Request Header:
 
@@ -794,11 +803,382 @@ X-API-TOKEN : Token (mandatory)
 #### Response Body:
 
 ```json
-{}
+{
+  {
+  "status": true,
+  "message": "Products retrieved successfully",
+  "data": [
+    {
+      "idProduct": "prod-001",
+      "name": "Ralph Lauren White Polo Shirt",
+      "description": "Classic white polo shirt made from premium cotton.",
+      "price": 785000,
+      "category": "topWear",
+    },
+    {
+      "idProduct": "prod-002",
+      "name": "Uniqlo Slim Fit T-Shirt",
+      "description": "Basic slim fit t-shirt for daily wear.",
+      "price": 345000,
+      "category": "topWear",
+    }
+  ],
+}
+}
 ```
 
 #### Query:
 
 ```sql
+SELECT
+  idProduct,
+  name,
+  description,
+  price,
+  category
+FROM products
+WHERE (:category IS NULL OR category = :category);
+```
 
+### 2.2. product detail
+
+#### Endpoint: GET /api/v1/products/{productId}
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  -
+}
+```
+
+#### Response Body:
+
+```json
+{
+  "status": true,
+  "message": "product is favorite for current user",
+  "name": "Ralph Lauren White Polo Shirt",
+  "description": "A classic white polo shirt by Ralph Lauren, made from premium cotton for a comfortable fit.",
+  "price": 785000,
+  "category": "topWear",
+  "size": "XL",
+  "stockQuantity": 17
+}
+```
+
+```json
+{
+  "status": true,
+  "message": "product isn't favorite for current user",
+  "name": "Uniqlo Slim Fit T-Shirt",
+  "description": "Basic slim fit t-shirt from Uniqlo, ideal for daily wear and layering.",
+  "price": 345000,
+  "category": "topWear",
+  "size": "L",
+  "stockQuantity": 23
+}
+```
+
+#### Query:
+
+```sql
+SELECT
+  name,
+  description,
+  price,
+  category,
+  size,
+  stock_quantity
+FROM products
+WHERE id = :productId;
+
+```
+
+## 3. Admin CRUD Product
+
+![alt text](image-8.png)
+
+### 3.1. add new product
+
+#### Endpoint: POST /api/v1/products
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  "name": "Ralph Lauren White Polo Shirt",
+  "description": "A classic white polo shirt by Ralph Lauren, made from premium cotton for a comfortable fit.",
+  "price": 785000,
+  "category": "topWear",
+  "size": "XL",
+  "stockQuantity": 17
+}
+```
+
+#### Response Body:
+
+```json
+{
+  {
+  "status": true,
+  "message": "Products successfully added",
+  "data": [
+    {
+      "idProduct": "prod-001",
+      "name": "Ralph Lauren White Polo Shirt",
+      "description": "A classic white polo shirt by Ralph Lauren, made from premium cotton for a comfortable fit.",
+      "price": 785000,
+      "category": "topWear",
+      "size": "XL",
+      "stockQuantity": 17,
+    },
+  ],
+}
+}
+```
+
+#### Query:
+
+```sql
+INSERT INTO products
+    (name,
+     description,
+     price,
+     category,
+     size,
+     stock_quantity)
+VALUES
+    ('Ralph Lauren White Polo Shirt',
+     'A classic white polo shirt by Ralph Lauren, made from premium cotton for a comfortable fit.',
+     785000,
+     'topWear',
+     'XL',
+     17);
+
+```
+
+```sql
+SELECT *
+FROM products
+WHERE id_product = 'prod-001';  -- or use LAST_INSERT_ID() if auto-generated
+```
+
+### 3.2. search product
+
+#### Endpoint: GET /api/v1/search/products
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  "keyword": "Shirt"
+}
+```
+
+```json
+{
+  "keyword": "Fresh Fish"
+}
+```
+
+#### Response Body:
+
+```json
+{
+  "status": "true",
+  "message": "berhasil mencari data",
+  "data": [
+    {
+      "idProduct": "prod-001",
+      "name": "Ralph Lauren White Polo Shirt",
+      "description": "Classic white polo shirt made from premium cotton.",
+      "price": 785000,
+      "category": "topWear"
+      "size": "XL",
+      "stockQuantity": 17,
+    },
+    {
+      "idProduct": "prod-002",
+      "name": "Uniqlo Slim Fit T-Shirt",
+      "description": "Basic slim fit t-shirt for daily wear.",
+      "price": 345000,
+      "category": "topWear",
+      "size": "L",
+      "stockQuantity": 23,
+    }
+  ]
+}
+```
+
+```json
+{
+  "status": "true",
+  "message": "berhasil mencari data",
+  "data": []
+}
+```
+
+#### Query:
+
+```sql
+SELECT
+  id_product    AS idProduct,
+  name,
+  description,
+  price,
+  category
+FROM products
+WHERE name        LIKE CONCAT('%', :keyword, '%')
+   OR description LIKE CONCAT('%', :keyword, '%');
+
+```
+
+### 3.3. edit product
+
+#### Endpoint: PATCH /api/v1/products/{productId}
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  "name": "Special Edition Ralph Lauren X Louis Vuitton White Polo Shirt",
+  "description": "A special white polo shirt by Ralph Lauren X Louis Vuitton, made from premium cotton for a comfortable fit.",
+  "price": 16500000,
+  "category": "topWear",
+  "size": "L",
+  "stockQuantity": 2
+}
+```
+
+#### Response Body:
+
+```json
+{
+  {
+  "status": true,
+  "message": "Products successfully edited",
+  "data": [
+    {
+      "idProduct": "prod-001",
+      "name": "Special Edition Ralph Lauren X Louis Vuitton White Polo Shirt",
+      "description": "A special white polo shirt by Ralph Lauren X Louis Vuitton, made from premium cotton for a comfortable fit.",
+      "price": 16500000,
+      "category": "topWear",
+      "size": "L",
+      "stockQuantity": 2,
+    },
+    {
+      "idProduct": "prod-002",
+      "name": "Uniqlo Slim Fit T-Shirt",
+      "description": "Basic slim fit t-shirt for daily wear.",
+      "price": 345000,
+      "category": "topWear"
+      "size": "L",
+      "stockQuantity": 23,
+    },
+  ],
+}
+}
+```
+
+#### Query:
+
+```sql
+UPDATE products
+SET
+  name           = :name,
+  description    = :description,
+  price          = :price,
+  category       = :category,
+  size           = :size,
+  stock_quantity = :stockQuantity
+WHERE id_product   = :productId;
+
+```
+
+```sql
+SELECT
+  id_product    AS idProduct,
+  name,
+  description,
+  price,
+  category,
+  size,
+  stock_quantity AS stockQuantity
+FROM products;
+
+```
+
+### 3.4. delete product
+
+#### Endpoint: DELETE /api/v1/products/{productId}
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  -
+}
+```
+
+#### Response Body:
+
+```json
+{
+  {
+  "status": true,
+  "message": "Products successfully deleted",
+  "data": [
+    {
+      "idProduct": "prod-002",
+      "name": "Uniqlo Slim Fit T-Shirt",
+      "description": "Basic slim fit t-shirt for daily wear.",
+      "price": 345000,
+      "category": "topWear",
+      "size": "L",
+      "stockQuantity": 23,
+    },
+  ],
+}
+}
+```
+
+#### Query:
+
+```sql
+DELETE FROM products
+WHERE id_product = :productId;
+```
+
+```sql
+SELECT
+  id_product      AS idProduct,
+  name,
+  description,
+  price,
+  category,
+  size,
+  stock_quantity AS stockQuantity
+FROM products;
 ```
