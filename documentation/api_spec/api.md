@@ -32,6 +32,8 @@ X-API-TOKEN : Token (mandatory)
 
 ## 2. Customer Product List include Category
 
+![alt text](image-2.png)
+
 ### 2.1. Customer get product
 
 #### Endpoint: GET /api/v1/products?category={category}
@@ -89,6 +91,8 @@ WHERE (:category IS NULL OR category = :category);
 ```
 
 ## 3. Customer Product Details include Favorite
+
+![alt text](image-3.png)
 
 ### 3.1. Get product detail information
 
@@ -226,9 +230,9 @@ WHERE idProduct = :productId AND idCustomer = :customerId;
 
 ## 4. Customer Cart CRUD
 
-### 4.1. add to product to cart
-
 ![alt text](image-4.png)
+
+### 4.1. add to product to cart
 
 #### Endpoint: POST /api/v1/carts/{productId}
 
