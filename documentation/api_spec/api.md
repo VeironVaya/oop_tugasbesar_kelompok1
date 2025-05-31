@@ -1,5 +1,64 @@
 # Stylow Restful API
 
+# OVERVIEW
+
+- [CUSTOMER](#customer)
+- [1. Customer Authentication](#1-customer-authentication)
+
+  - [1.1. Registration](#11-registration)
+  - [1.2. Login](#12-login)
+  - [1.3. Logout](#13-logout)
+
+- [2. Customer Product List include Category](#2-customer-product-list-include-category)
+
+  - [2.1. Customer get product](#21-customer-get-product)
+
+- [3. Customer Product Details include Favorite](#3-customer-product-details-include-favorite)
+
+  - [3.1. Get product detail information](#31-get-product-detail-information)
+  - [3.2. Add favorite product](#32-add-favorite-product)
+  - [3.3. Remove favorite product](#33-remove-favorite-product)
+
+- [4. Customer Cart CRUD](#4-customer-cart-crud)
+
+  - [4.1. Add product to cart](#41-add-product-to-cart)
+  - [4.2. Cart information](#42-cart-information)
+
+- [5. Customer Checkout Cart and see Transaction History](#5-customer-checkout-cart-and-see-transaction-history)
+
+  - [5.1. Checkout](#51-checkout)
+  - [5.2. Customer see all his transaction history](#52-customer-see-all-his-transaction-history)
+
+- [6. Customer Search Product](#6-customer-search-product)
+
+  - [6.1. Search product](#61-search-product)
+
+---
+
+- [ADMIN](#admin)
+- [1. Admin Authentication](#1-admin-authentication)
+
+  - [1.1. Login](#11-login)
+  - [1.2. Logout](#12-logout)
+
+- [2. Admin Product List and Product](#2-admin-product-list-and-product)
+
+  - [2.1. Product List](#21-product-list)
+  - [2.2. Product detail](#22-product-detail)
+
+- [3. Admin CRUD Product](#3-admin-crud-product)
+
+  - [3.1. Add new product](#31-add-new-product)
+  - [3.2. Search product](#32-search-product)
+  - [3.3. Edit product](#33-edit-product)
+  - [3.4. Delete product](#34-delete-product)
+
+- [4. Admin Transaction Handler](#4-admin-transaction-handler)
+  - [4.1. See all transaction](#41-see-all-transaction)
+  - [4.2. Search transaction history](#42-search-transaction-history)
+  - [4.3. See transaction detail](#43-see-transaction-detail)
+  - [4.4. Update payment status](#44-update-payment-status)
+
 # CUSTOMER
 
 ## 1. Customer Authentication
@@ -255,7 +314,7 @@ INSERT INTO FavoriteProduct (idProduct, idCustomer)
 VALUES (:productId, :customerId);
 ```
 
-### 3.1. remove favorite product
+### 3.3. remove favorite product
 
 #### Endpoint: DELETE /api/v1/products/{productId}/customer/{customerId}/favorites
 
@@ -1181,4 +1240,321 @@ SELECT
   size,
   stock_quantity AS stockQuantity
 FROM products;
+```
+
+## 4. Admin Transaction Handler
+
+![alt text](image-9.png)
+
+### 4.1. see all transaction
+
+#### Endpoint: GET /api/v1/transactionHistory
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  -
+}
+```
+
+#### Response Body:
+
+```json
+{
+  "status": true,
+  "message": "All transaction histories successfully retrieved",
+  "data": {
+    "transactions": [
+      {
+        "transactionHistoryId": "transaction-001",
+        "totalPrice": 1130000,
+        "paymentStatus": false,
+        "date": "30-05-2025",
+        "itemData": [
+          {
+            "idCartItemTemp": "temp-item-001",
+            "name": "Ralph Lauren White Polo Shirt",
+            "description": "Classic white polo shirt made from premium cotton.",
+            "totalPrice": 785000,
+            "quantity": 2,
+            "size": "XL"
+          },
+          {
+            "idCartItemTemp": "temp-item-002",
+            "name": "Uniqlo Slim Fit T-Shirt",
+            "description": "Basic slim fit t-shirt for daily wear.",
+            "totalPrice": 345000,
+            "quantity": 1,
+            "size": "L"
+          }
+        ]
+      },
+      {
+        "transactionHistoryId": "transaction-002",
+        "totalPrice": 500000,
+        "paymentStatus": true,
+        "date": "30-05-2025",
+        "itemData": [
+          {
+            "idCartItemTemp": "temp-item-003",
+            "name": "Levi’s 501 Original Jeans",
+            "description": "Iconic straight-leg denim jeans.",
+            "totalPrice": 500000,
+            "quantity": 1,
+            "size": "M"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+#### Query:
+
+```sql
+SELECT
+  th.transaction_history_id     AS transactionHistoryId,
+  th.total_price                AS totalPrice,
+  th.payment_status             AS paymentStatus,
+  DATE_FORMAT(th.date, '%d-%m-%Y') AS date
+FROM transaction_history AS th
+ORDER BY th.date DESC;
+```
+
+```sql
+SELECT
+  ci.id_cart_item_temp          AS idCartItemTemp,
+  ci.name                       AS name,
+  ci.description                AS description,
+  ci.total_price                AS totalPrice,
+  ci.quantity                   AS quantity,
+  ci.size                       AS size
+FROM cart_item_temp AS ci
+JOIN transaction_items AS ti
+  ON ci.id_cart_item_temp = ti.id_cart_item_temp
+WHERE ti.transaction_history_id = 'transaction-001';
+```
+
+### 4.2. search transaction history
+
+#### Endpoint: GET /api/v1/transactionHistory/{inputId}
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  -
+}
+```
+
+#### Response Body:
+
+```json
+{
+  "status": true,
+  "message": "Transaction history successfully retrieved",
+  "data": {
+    "transaction": {
+      "transactionHistoryId": "transaction-001",
+      "totalPrice": 1130000,
+      "paymentStatus": false,
+      "date": "30-05-2025",
+      "itemData": [
+        {
+          "idCartItemTemp": "temp-item-001",
+          "name": "Ralph Lauren White Polo Shirt",
+          "description": "Classic white polo shirt made from premium cotton.",
+          "totalPrice": 785000,
+          "quantity": 2,
+          "size": "XL"
+        },
+        {
+          "idCartItemTemp": "temp-item-002",
+          "name": "Uniqlo Slim Fit T-Shirt",
+          "description": "Basic slim fit t-shirt for daily wear.",
+          "totalPrice": 345000,
+          "quantity": 1,
+          "size": "L"
+        }
+      ]
+    }
+  }
+}
+```
+
+```json
+{
+  "status": false,
+  "message": "Transaction history with ID 'transaction-001' not found"
+}
+```
+
+#### Query:
+
+```sql
+SELECT
+  th.transaction_history_id     AS transactionHistoryId,
+  th.total_price                AS totalPrice,
+  th.payment_status             AS paymentStatus,
+  DATE_FORMAT(th.date, '%d-%m-%Y') AS date
+FROM transaction_history AS th
+WHERE th.transaction_history_id = 'transaction-001';
+
+```
+
+```sql
+SELECT
+  ci.id_cart_item_temp       AS idCartItemTemp,
+  ci.name                    AS name,
+  ci.description             AS description,
+  ci.total_price             AS totalPrice,
+  ci.quantity                AS quantity,
+  ci.size                    AS size
+FROM cart_item_temp AS ci
+JOIN transaction_items AS ti
+  ON ci.id_cart_item_temp = ti.id_cart_item_temp
+WHERE ti.transaction_history_id = 'transaction-001';
+
+```
+
+### 4.3. see transaction detail
+
+#### Endpoint: GET /api/v1/transactionHistory/{transactionHistoryId}
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  -
+}
+```
+
+#### Response Body:
+
+```json
+{
+  "status": true,
+  "message": "Transaction detail successfully retrieved",
+  "data": {
+    "transaction": {
+      "transactionHistoryId": "transaction-001",
+      "totalPrice": 1130000,
+      "paymentStatus": false,
+      "date": "30-05-2025",
+      "itemData": [
+        {
+          "idCartItemTemp": "temp-item-001",
+          "name": "Ralph Lauren White Polo Shirt",
+          "description": "Classic white polo shirt made from premium cotton.",
+          "totalPrice": 785000,
+          "quantity": 2,
+          "size": "XL"
+        },
+        {
+          "idCartItemTemp": "temp-item-002",
+          "name": "Uniqlo Slim Fit T-Shirt",
+          "description": "Basic slim fit t-shirt for daily wear.",
+          "totalPrice": 345000,
+          "quantity": 1,
+          "size": "L"
+        }
+      ]
+    }
+  }
+}
+```
+
+#### Query:
+
+```sql
+SELECT
+  th.transaction_history_id      AS transactionHistoryId,
+  th.total_price                 AS totalPrice,
+  th.payment_status              AS paymentStatus,
+  DATE_FORMAT(th.date, '%d-%m-%Y') AS date
+FROM transaction_history AS th
+WHERE th.transaction_history_id = 'transaction-001';
+
+```
+
+```sql
+SELECT
+  ci.id_cart_item_temp       AS idCartItemTemp,
+  ci.name                    AS name,
+  ci.description             AS description,
+  ci.total_price             AS totalPrice,
+  ci.quantity                AS quantity,
+  ci.size                    AS size
+FROM cart_item_temp AS ci
+JOIN transaction_items AS ti
+  ON ci.id_cart_item_temp = ti.id_cart_item_temp
+WHERE ti.transaction_history_id = 'transaction-001';
+
+```
+
+### 4.4. update payment status
+
+#### Endpoint: PATCH /api/v1/transactionHistory/{transactionHistoryId}
+
+#### Request Header:
+
+X-API-TOKEN : Token (mandatory)
+
+#### Request Body:
+
+```json
+{
+  "paymentStatus": true
+}
+```
+
+#### Response Body:
+
+```json
+{
+  "status": true,
+  "message": "Payment status successfully updated",
+  "data": {
+    "transaction": {
+      "transactionHistoryId": "transaction-001",
+      "totalPrice": 1130000,
+      "paymentStatus": true,
+      "date": "30-05-2025"
+    }
+  }
+}
+```
+
+#### Query:
+
+```sql
+UPDATE transaction_history
+SET payment_status = TRUE
+WHERE transaction_history_id = 'transaction-001';
+
+```
+
+```sql
+SELECT
+  th.transaction_history_id      AS transactionHistoryId,
+  th.total_price                 AS totalPrice,
+  th.payment_status              AS paymentStatus,
+  DATE_FORMAT(th.date, '%d-%m-%Y') AS date
+FROM transaction_history AS th
+WHERE th.transaction_history_id = 'transaction-001';
+
 ```
