@@ -38,6 +38,17 @@ public class ProductService {
     }
     productRepository.deleteByName(name);
 }
+    public Product patchProduct(Long id, ProductDto dto) {
+        Product product = productRepository.findById(id).orElseThrow(() ->
+            new IllegalArgumentException("Product with ID " + id + " not found")
+        );
+        product.setName(dto.getName());
+        product.setDescription(dto.getDescription());
+        product.setPrice(dto.getPrice());
+        product.setCategory(dto.getCategory());
+
+        return productRepository.save(product);
+    }
 
 
     
