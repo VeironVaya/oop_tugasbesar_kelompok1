@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.springboot.dto.ProductDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.repository.ProductRepository;
+import java.util.List;
 
 @Service
 @Transactional
@@ -27,7 +28,10 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
     public void deleteProduct(String name) {
     if (!productRepository.existsByName(name)) {
         throw new IllegalArgumentException("Product with ID " + name + " not found");
