@@ -4,8 +4,8 @@ import { products } from "../assets/assets";
 export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
-  const currency = "$";
-  const delivery_fee = 10;
+  const currency = "Rp.";
+  const delivery_fee = 10000;
 
   const [cartItems, setCartItems] = useState({});
   const [user, setUser] = useState(null);
