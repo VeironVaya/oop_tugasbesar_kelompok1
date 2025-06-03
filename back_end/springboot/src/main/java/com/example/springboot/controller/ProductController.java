@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
+
 
 import com.example.springboot.dto.ProductDto;
 import com.example.springboot.entity.Product;
@@ -41,6 +43,11 @@ public class ProductController {
     productService.deleteProduct(name);
     return ResponseEntity.noContent().build();
 }
+    @PatchMapping("/{id_product}")
+    public ResponseEntity<Product> patchProduct(@PathVariable("id_product") Long id, @RequestBody ProductDto dto) {
+        Product updateProduct = productService.patchProduct(id, dto);
+        return ResponseEntity.ok(updateProduct);
+    }
 
 }
 
