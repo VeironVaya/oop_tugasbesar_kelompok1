@@ -42,18 +42,21 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable("name") String name) {
     productService.deleteProduct(name);
     return ResponseEntity.noContent().build();
-}
+    }
+
     @PatchMapping("/{id_product}")
     public ResponseEntity<Product> patchProduct(@PathVariable("id_product") Long id, @RequestBody ProductDto dto) {
         Product updateProduct = productService.patchProduct(id, dto);
         return ResponseEntity.ok(updateProduct);
     }
 
+    @GetMapping("/{id_product}")
+    public ResponseEntity<Product> getProductDetail(@PathVariable("id_product") long id) {
+        Product product = productService.getProductDetail(id);
+        return ResponseEntity.ok(product);
+    }
+
 }
-
-
-    
-   
 
 
 
