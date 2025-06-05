@@ -50,6 +50,11 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public Product getProductDetail(Long id) {
+        return productRepository.findById(id).orElseThrow(() -> 
+        new IllegalArgumentException("Product with ID " + id + " not found"));
+    }
+
 
     
 
