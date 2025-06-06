@@ -1,20 +1,20 @@
 package com.example.springboot.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PatchMapping;
-
 
 import com.example.springboot.dto.ProductDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.service.ProductService;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -38,9 +38,9 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @DeleteMapping("/{name}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable("name") String name) {
-    productService.deleteProduct(name);
+    @DeleteMapping("/{id_product}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable("id_product") Long id_product) {
+    productService.deleteProduct(id_product);
     return ResponseEntity.noContent().build();
     }
 
