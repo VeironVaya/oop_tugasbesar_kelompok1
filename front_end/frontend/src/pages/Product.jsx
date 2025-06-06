@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
 import { assets } from "../assets/assets";
 
@@ -7,7 +7,15 @@ const currency = "$";
 
 const Product = () => {
   const { productId } = useParams();
-  const { products, addToCart } = useContext(ShopContext);
+  const navigate = useNavigate();
+  const {
+    products,
+    addToCart,
+    user,
+    favoriteItems,
+    addToFavorites,
+    removeFromFavorites,
+  } = useContext(ShopContext);
 
   const [productData, setProductData] = useState(null);
   const [image, setImage] = useState("");
@@ -15,17 +23,38 @@ const Product = () => {
   const [favorited, setFavorited] = useState(false);
 
   useEffect(() => {
+    // Redirect ke login jika user belum login
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     if (products.length > 0) {
       const product = products.find((item) => item._id === productId);
       if (product) {
         setProductData(product);
         setImage(product.image[0]);
         setSize("");
+
+        // Cek apakah produk sudah difavoritkan
+        const isFavorited = favoriteItems.some(
+          (item) => item._id === product._id
+        );
+        setFavorited(isFavorited);
       } else {
         setProductData(null);
       }
     }
-  }, [productId, products]);
+  }, [productId, products, user, navigate, favoriteItems]);
+
+  const handleFavoriteToggle = () => {
+    if (favorited) {
+      removeFromFavorites(productData._id);
+    } else {
+      addToFavorites(productData);
+    }
+    setFavorited(!favorited);
+  };
 
   if (!productData) {
     return <div className="p-10 text-center">Loading product...</div>;
@@ -51,7 +80,7 @@ const Product = () => {
           {/* ---------- Gambar Utama + Ikon favorite ---------- */}
           <div className="w-full sm:w-[80%] relative">
             <button
-              onClick={() => setFavorited(!favorited)}
+              onClick={handleFavoriteToggle}
               className="absolute top-4 right-4 z-10 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
             >
               <img
@@ -70,7 +99,6 @@ const Product = () => {
 
         {/* ------- Product Info -------- */}
         <div className="flex-1">
-          {/* Kategori */}
           <div className="text-xs mb-2 inline-block bg-gray-200 px-2 py-1 rounded uppercase tracking-widest font-medium">
             {productData.subCategory}
           </div>
@@ -92,7 +120,6 @@ const Product = () => {
             {productData.description}
           </p>
 
-          {/* Ukuran */}
           <div className="flex flex-col gap-4 my-8">
             <p className="text-sm font-medium">Select Size</p>
             <div className="flex gap-2">
@@ -112,12 +139,10 @@ const Product = () => {
             </div>
           </div>
 
-          {/* Stok */}
           <p className="text-sm mb-6 text-gray-600">
             Stock: {productData.stock ?? 0}
           </p>
 
-          {/* Tombol Add to Cart */}
           <button
             onClick={() => addToCart(productData._id, size)}
             disabled={!size}
