@@ -28,14 +28,11 @@ public class ProductService {
     }
 
     
-    public void deleteProduct(String name) {
-    if (!productRepository.existsByName(name)) {
-        throw new IllegalArgumentException("Product with ID " + name + " not found");
+    public void deleteProduct(Long Id) {
+    if (!productRepository.existsById(Id)) {
+        throw new IllegalArgumentException("Product with ID " + Id + " not found");
     }
-    productRepository.deleteByName(name);
+    productRepository.deleteById(Id);
 }
-
-
-    
 
 }
