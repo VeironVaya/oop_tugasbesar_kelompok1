@@ -7,16 +7,14 @@ export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
   const currency = "$";
-  const delivery_fee = 10;
+  // const delivery_fee = 10;
 
   const [cartItems, setCartItems] = useState({});
   const [favoriteItems, setFavoriteItems] = useState([]);
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(localStorage.getItem("role") || "");
-
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -91,10 +89,9 @@ const ShopContextProvider = (props) => {
     return totalAmount;
   };
 
-  // ✅ Gunakan satu definisi value saja, lengkap
   const value = {
     currency,
-    delivery_fee,
+    // delivery_fee,
     products,
     cartItems,
     setCartItems,
