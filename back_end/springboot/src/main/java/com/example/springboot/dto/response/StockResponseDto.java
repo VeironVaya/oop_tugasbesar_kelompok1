@@ -13,6 +13,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class StockResponseDto {
+    private Boolean status;
+    private String message;
     private Long idStock;
     private String size;
     private int stockQuantity;

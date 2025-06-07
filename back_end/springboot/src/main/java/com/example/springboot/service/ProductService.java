@@ -10,6 +10,7 @@ import com.example.springboot.dto.response.ProductWithStockResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.entity.Stock;
+import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.repository.ProductRepository;
 import com.example.springboot.repository.StockRepository;
 
@@ -26,8 +27,21 @@ public class ProductService {
         this.stockRepository = stockRepository;
     }
 
-    public ProductWithStockResponseDto addProduct(ProductWithStockRequestDto dto) {
+    public ProductWithStockResponseDto postProductWithStockResponseDto(ProductWithStockRequestDto dto) {
    
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new InvalidDataException("Name is required");
+        }
+        if (dto.getPrice() < 0) {
+            throw new InvalidDataException("Price must be non-negative");
+        }
+        if (dto.getSize() == null || dto.getSize().trim().isEmpty()) {
+            throw new InvalidDataException("Size is required");
+        }
+        if (dto.getStockQuantity() < 0) {
+            throw new InvalidDataException("Stock quantity must be non-negative");
+        }
+
     Product p = new Product();
     p.setName(dto.getName());
     p.setDescription(dto.getDescription());
@@ -59,7 +73,7 @@ public class ProductService {
     resp.setStocks(List.of(stockDto));
 
     return resp;
-}
+    }
 
 
     public List<Product> getAllProducts() {
