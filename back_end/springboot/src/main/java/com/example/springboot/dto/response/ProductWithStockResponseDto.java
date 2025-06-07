@@ -12,7 +12,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ProductResponseDto {
+public class ProductWithStockResponseDto {
     private Long idProduct;
     private String name;
     private String description;

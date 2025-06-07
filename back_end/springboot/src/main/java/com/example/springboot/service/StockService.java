@@ -3,7 +3,7 @@ package com.example.springboot.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.springboot.dto.request.StockDto;
+import com.example.springboot.dto.request.StockRequestDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.entity.Stock;
@@ -25,7 +25,7 @@ public class StockService {
         this.productRepository = productRepository;
     }
 
-    public StockResponseDto addStockToProduct(Long productId, StockDto dto) {
+    public StockResponseDto addStockToProduct(Long productId, StockRequestDto dto) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
