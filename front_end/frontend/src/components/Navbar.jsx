@@ -56,6 +56,16 @@ const Navbar = () => {
           alt="Search"
         />
 
+        <div className="flex items-center gap-6 text-sm text-gray-700">
+          <NavLink to="/cart">
+            <img
+              src={assets.cart_icon}
+              className="w-5 cursor-pointer"
+              alt="Cart"
+            />
+          </NavLink>
+        </div>
+
         {user ? (
           <div className="relative" ref={dropdownRef}>
             <span
