@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springboot.dto.request.ProductDto;
-import com.example.springboot.dto.request.StockDto;
-import com.example.springboot.dto.response.ProductResponseDto;
+import com.example.springboot.dto.request.ProductWithStockRequestDto;
+import com.example.springboot.dto.request.StockRequestDto;
+import com.example.springboot.dto.response.ProductWithStockResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.service.ProductService;
@@ -34,15 +34,15 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductResponseDto> addProduct(@RequestBody ProductDto dto) {
-    ProductResponseDto saved = productService.addProduct(dto);
+    public ResponseEntity<ProductWithStockResponseDto> addProduct(@RequestBody ProductWithStockRequestDto dto) {
+    ProductWithStockResponseDto saved = productService.addProduct(dto);
     return ResponseEntity.ok(saved);
     }
 
     @PostMapping("/{productId}/stocks")
     public ResponseEntity<StockResponseDto> addStockToProduct(
             @PathVariable Long productId,
-            @RequestBody StockDto dto
+            @RequestBody StockRequestDto dto
     ) 
     {
         StockResponseDto savedStock = stockService.addStockToProduct(productId, dto);
@@ -60,7 +60,7 @@ public class ProductController {
     }
 
     return ResponseEntity.ok(products);
-}
+    }
 
 
     @DeleteMapping("/{id_product}")
@@ -70,7 +70,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{id_product}")
-    public ResponseEntity<Product> patchProduct(@PathVariable("id_product") Long id, @RequestBody ProductDto dto) {
+    public ResponseEntity<Product> patchProduct(@PathVariable("id_product") Long id, @RequestBody ProductWithStockRequestDto dto) {
         Product updateProduct = productService.patchProduct(id, dto);
         return ResponseEntity.ok(updateProduct);
     }

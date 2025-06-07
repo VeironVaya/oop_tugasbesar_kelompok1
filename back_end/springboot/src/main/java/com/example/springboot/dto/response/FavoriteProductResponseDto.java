@@ -13,5 +13,5 @@ public class FavoriteProductResponseDto {
      * If you want to show full product details in the “favorites” list,
      * embed a ProductResponseDto here.
      */
-    private ProductResponseDto product;
+    private ProductWithStockResponseDto product;
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class StockDto {
+public class StockRequestDto {
     private String size;
     private int stockQuantity;
 }
