@@ -65,21 +65,30 @@ const Cart = () => {
                   </div>
                 </div>
               </div>
-              <input
-                onChange={(e) =>
-                  e.target.value === "" || e.target.value === "0"
-                    ? null
-                    : updateQuantity(
-                        item._id,
-                        item.size,
-                        Number(e.target.value)
-                      )
-                }
-                className="border max-w-10 sm:max-w-20 px-1 sm:px-2 py-1"
-                type="number"
-                min={1}
-                defaultValue={item.quantity}
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    updateQuantity(
+                      item._id,
+                      item.size,
+                      Math.max(1, item.quantity - 1)
+                    )
+                  }
+                  className="px-2 py-1 border rounded text-lg"
+                >
+                  -
+                </button>
+                <span>{item.quantity}</span>
+                <button
+                  onClick={() =>
+                    updateQuantity(item._id, item.size, item.quantity + 1)
+                  }
+                  className="px-2 py-1 border rounded text-lg"
+                >
+                  +
+                </button>
+              </div>
+
               <img
                 onClick={() => updateQuantity(item._id, item.size, 0)}
                 className="w-4 mr-4 sm:w-5 cursor-pointer"
@@ -99,7 +108,7 @@ const Cart = () => {
               onClick={() => navigate("/place-order")}
               className="bg-black text-white text-sm my-8 px-8 py-3"
             >
-              PROCEED TO CHECKOUT
+              CHECKOUT
             </button>
           </div>
         </div>
