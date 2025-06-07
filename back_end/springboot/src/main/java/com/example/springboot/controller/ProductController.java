@@ -10,33 +10,58 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springboot.dto.ProductDto;
+import com.example.springboot.dto.request.ProductDto;
+import com.example.springboot.dto.request.StockDto;
+import com.example.springboot.dto.response.ProductResponseDto;
+import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.service.ProductService;
+import com.example.springboot.service.StockService;
 
 @RestController
 @RequestMapping("/api/v1/products")
 public class ProductController {
 
     private final ProductService productService;
+    private final StockService stockService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService,StockService stockService) {
         this.productService = productService;
+        this.stockService = stockService;
     }
 
     @PostMapping
-    public ResponseEntity<Product> addProduct(@RequestBody ProductDto dto) {
-        Product savedProduct = productService.addProduct(dto);
-        return ResponseEntity.ok(savedProduct);
+    public ResponseEntity<ProductResponseDto> addProduct(@RequestBody ProductDto dto) {
+    ProductResponseDto saved = productService.addProduct(dto);
+    return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/{productId}/stocks")
+    public ResponseEntity<StockResponseDto> addStockToProduct(
+            @PathVariable Long productId,
+            @RequestBody StockDto dto
+    ) 
+    {
+        StockResponseDto savedStock = stockService.addStockToProduct(productId, dto);
+        return ResponseEntity.ok(savedStock);
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
-        return ResponseEntity.ok(products);
+    public ResponseEntity<List<Product>> getAllProducts(@RequestParam(required = false) String category) {
+    List<Product> products;
+    
+    if (category != null && !category.isEmpty()) {
+        products = productService.getProductsByCategory(category);
+    } else {
+        products = productService.getAllProducts();
     }
+
+    return ResponseEntity.ok(products);
+}
+
 
     @DeleteMapping("/{id_product}")
     public ResponseEntity<Void> deleteProduct(@PathVariable("id_product") Long id_product) {
@@ -56,7 +81,17 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> getSearchProduct(@RequestParam(required = false) String keyword) {
+        List<Product> products = productService.getProductsByKeyword(keyword);
+        return ResponseEntity.ok(products);
 }
+
+
+
+}
+
+
 
 
 
