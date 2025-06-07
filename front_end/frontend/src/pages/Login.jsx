@@ -3,26 +3,25 @@ import { useNavigate } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { setUser, setUserRole } = useContext(ShopContext);
   const navigate = useNavigate();
 
   const handleLogin = (e) => {
     e.preventDefault();
-
-    if (email === "admin@example.com" && password === "admin123") {
-      setUser({ email });
+    if (username === "admin" && password === "admin123") {
+      setUser({ username });
       setUserRole("admin");
       localStorage.setItem("role", "admin");
       navigate("/admin/add-items");
-    } else if (email === "user@example.com" && password === "user123") {
-      setUser({ email });
+    } else if (username === "user" && password === "user123") {
+      setUser({ username });
       setUserRole("user");
       localStorage.setItem("role", "user");
       navigate("/");
     } else {
-      alert("Email atau password salah");
+      alert("Username atau password salah");
     }
   };
 
@@ -40,13 +39,13 @@ const Login = () => {
           </h2>
         </div>
 
-        {/* Input: Email */}
+        {/* Input: Username */}
         <div className="mb-6">
           <input
-            type="email"
+            type="text"
             placeholder="Username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             className="w-full border-b border-black focus:outline-none py-2 placeholder-gray-400"
           />
@@ -87,7 +86,7 @@ const Login = () => {
           <button
             type="button"
             onClick={() => {
-              setEmail("admin@example.com");
+              setUsername("admin");
               setPassword("admin123");
             }}
             className="hover:underline"
