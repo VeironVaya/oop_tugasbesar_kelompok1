@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.request.ProductWithStockRequestDto;
 import com.example.springboot.dto.request.StockRequestDto;
+import com.example.springboot.dto.response.ProductResponseDto;
 import com.example.springboot.dto.response.ProductWithStockResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
@@ -93,16 +94,16 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts(@RequestParam(required = false) String category) {
-    List<Product> products;
-    
-    if (category != null && !category.isEmpty()) {
-        products = productService.getProductsByCategory(category);
-    } else {
-        products = productService.getAllProducts();
-    }
+    public ResponseEntity<List<ProductResponseDto>> getAllProducts(
+            @RequestParam(required = false) String category) {
 
-    return ResponseEntity.ok(products);
+        List<ProductResponseDto> products;
+        if (category != null && !category.isEmpty()) {
+            products = productService.getProductsByCategory(category);
+        } else {
+            products = productService.getAllProducts();
+        }
+        return ResponseEntity.ok(products);
     }
 
 

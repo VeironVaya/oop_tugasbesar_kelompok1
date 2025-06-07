@@ -1,11 +1,13 @@
 package com.example.springboot.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.springboot.dto.request.ProductWithStockRequestDto;
+import com.example.springboot.dto.response.ProductResponseDto;
 import com.example.springboot.dto.response.ProductWithStockResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
@@ -29,18 +31,18 @@ public class ProductService {
 
     public ProductWithStockResponseDto postProductWithStockResponseDto(ProductWithStockRequestDto dto) {
    
-        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
-            throw new InvalidDataException("Name is required");
-        }
-        if (dto.getPrice() < 0) {
-            throw new InvalidDataException("Price must be non-negative");
-        }
-        if (dto.getSize() == null || dto.getSize().trim().isEmpty()) {
-            throw new InvalidDataException("Size is required");
-        }
-        if (dto.getStockQuantity() < 0) {
-            throw new InvalidDataException("Stock quantity must be non-negative");
-        }
+    if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+        throw new InvalidDataException("Name is required");
+    }
+    if (dto.getPrice() < 0) {
+        throw new InvalidDataException("Price must be non-negative");
+    }
+     if (dto.getSize() == null || dto.getSize().trim().isEmpty()) {
+        throw new InvalidDataException("Size is required");
+    }
+    if (dto.getStockQuantity() < 0) {
+        throw new InvalidDataException("Stock quantity must be non-negative");
+    }
 
     Product p = new Product();
     p.setName(dto.getName());
@@ -59,7 +61,7 @@ public class ProductService {
 
     
     ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
-    resp.setIdProduct(saved.getId_product());
+    resp.setIdProduct(saved.getIdProduct());
     resp.setName(saved.getName());
     resp.setDescription(saved.getDescription());
     resp.setPrice(saved.getPrice());
@@ -76,13 +78,31 @@ public class ProductService {
     }
 
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductResponseDto> getAllProducts() {
+    return productRepository.findAll().stream()
+      .map(this::toDto)
+      .collect(Collectors.toList());
+
+    
+    }
+    public List<ProductResponseDto> getProductsByCategory(String category) {
+        return productRepository.findByCategoryIgnoreCase(category).stream()
+            .map(this::toDto)
+            .collect(Collectors.toList());
     }
 
-    public List<Product> getProductsByCategory(String category) {
-        return productRepository.findByCategoryIgnoreCase(category);
+    private ProductResponseDto toDto(Product p) {
+        ProductResponseDto dto = new ProductResponseDto();
+        dto.setIdProduct(p.getIdProduct());
+        dto.setName(p.getName());
+        dto.setDescription(p.getDescription());
+        dto.setPrice(p.getPrice());
+        dto.setCategory(p.getCategory());
+        return dto;
     }
+
+
+   
 
 
     public void deleteProduct(Long Id) {
