@@ -61,7 +61,7 @@ public class ProductService {
 
     
     ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
-    resp.setIdProduct(saved.getId_product());
+    resp.setIdProduct(saved.getIdProduct());
     resp.setName(saved.getName());
     resp.setDescription(saved.getDescription());
     resp.setPrice(saved.getPrice());
@@ -93,7 +93,7 @@ public class ProductService {
 
     private ProductResponseDto toDto(Product p) {
         ProductResponseDto dto = new ProductResponseDto();
-        dto.setIdProduct(p.getId_product());
+        dto.setIdProduct(p.getIdProduct());
         dto.setName(p.getName());
         dto.setDescription(p.getDescription());
         dto.setPrice(p.getPrice());

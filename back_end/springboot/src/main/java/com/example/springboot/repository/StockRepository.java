@@ -1,9 +1,11 @@
 package com.example.springboot.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.springboot.entity.Stock;
 
 public interface StockRepository extends JpaRepository<Stock, Long> {
-    // No extra methods needed for now
+     Optional<Stock> findByProduct_IdProductAndSize(Long productId, String size);
 }

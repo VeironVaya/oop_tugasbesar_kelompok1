@@ -37,6 +37,10 @@ public class StockService {
             throw new InvalidDataException("Stock must be non-negative");
         }
  
+            stockRepository.findByProduct_IdProductAndSize(productId, dto.getSize())
+      .ifPresent(existing -> {
+        throw new InvalidDataException("Size “" + dto.getSize() + "” already exists for this product");
+      });
 
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
