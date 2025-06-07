@@ -2,6 +2,7 @@ package com.example.springboot.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +19,10 @@ import com.example.springboot.dto.request.StockRequestDto;
 import com.example.springboot.dto.response.ProductWithStockResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
+import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.service.ProductService;
 import com.example.springboot.service.StockService;
+
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -33,20 +36,60 @@ public class ProductController {
         this.stockService = stockService;
     }
 
-    @PostMapping
-    public ResponseEntity<ProductWithStockResponseDto> addProduct(@RequestBody ProductWithStockRequestDto dto) {
-    ProductWithStockResponseDto saved = productService.addProduct(dto);
-    return ResponseEntity.ok(saved);
+     @PostMapping
+    public ResponseEntity<?> postProductWithStock(
+            @RequestBody ProductWithStockRequestDto dto) {
+        try {
+            ProductWithStockResponseDto saved = productService.postProductWithStockResponseDto(dto);
+            saved.setStatus(true);
+            saved.setMessage("Product created successfully");
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(saved);
+
+        } catch (InvalidDataException ex) {
+            ProductWithStockResponseDto error = new ProductWithStockResponseDto();
+            error.setStatus(false);
+            error.setMessage("Invalid product data: " + ex.getMessage());
+            return ResponseEntity
+                    .badRequest()
+                    .body(error);
+
+        } catch (Exception ex) {
+            ProductWithStockResponseDto error = new ProductWithStockResponseDto();
+            error.setStatus(false);
+            error.setMessage("An unexpected error occurred");
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(error);
+        }
     }
 
     @PostMapping("/{productId}/stocks")
-    public ResponseEntity<StockResponseDto> addStockToProduct(
+    public ResponseEntity<?> postStockToProduct(
             @PathVariable Long productId,
             @RequestBody StockRequestDto dto
     ) 
     {
-        StockResponseDto savedStock = stockService.addStockToProduct(productId, dto);
-        return ResponseEntity.ok(savedStock);
+
+        try {
+            StockResponseDto saved = stockService.postStockToProduct(productId, dto);
+            saved.setStatus(true);
+            saved.setMessage("Stock created successfully");
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(saved);
+
+        } catch (InvalidDataException ex) {
+            ProductWithStockResponseDto error = new ProductWithStockResponseDto();
+            error.setStatus(false);
+            error.setMessage("Invalid stock data: " + ex.getMessage());
+            return ResponseEntity
+                    .badRequest()
+                    .body(error);
+
+        } 
+
     }
 
     @GetMapping
