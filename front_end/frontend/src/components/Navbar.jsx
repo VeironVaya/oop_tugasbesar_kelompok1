@@ -111,7 +111,7 @@ const Navbar = () => {
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-300 rounded shadow-md z-10">
                   <NavLink
-                    to="/my-orders"
+                    to="/checkout"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                     onClick={() => setDropdownOpen(false)}
                   >

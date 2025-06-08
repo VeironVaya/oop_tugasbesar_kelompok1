@@ -104,14 +104,14 @@ const Product = () => {
           </div>
 
           <h1 className="font-medium text-2xl mt-2">{productData.name}</h1>
-          <div className="flex items-center gap-1 mt-2">
+          {/* <div className="flex items-center gap-1 mt-2">
             <img src={assets.star_icon} alt="star" className="w-4" />
             <img src={assets.star_icon} alt="star" className="w-4" />
             <img src={assets.star_icon} alt="star" className="w-4" />
             <img src={assets.star_icon} alt="star" className="w-4" />
             <img src={assets.star_dull_icon} alt="star dull" className="w-4" />
             <p className="pl-2 text-sm text-gray-500">(122)</p>
-          </div>
+          </div> */}
           <p className="mt-5 text-3xl font-semibold">
             {currency}
             {productData.price}
@@ -127,7 +127,7 @@ const Product = () => {
                 <button
                   key={index}
                   onClick={() => setSize(s)}
-                  className={`py-2 px-4 rounded-md text-sm border transition-all duration-300 ${
+                  className={`py-2 px-4 rounded-none text-sm border transition-all duration-300 ${
                     s === size
                       ? "border-orange-500 bg-orange-100 text-orange-600"
                       : "border-gray-300 text-gray-700"

@@ -113,8 +113,8 @@ const Cart = () => {
           <div className="w-full text-end">
             <button
               onClick={() => {
-                setCheckoutData(cartData); // simpan ke context
-                navigate("/checkout"); // pindah ke halaman checkout
+                setCheckoutData(cartData); 
+                navigate("/checkout");
               }}
               className="bg-black text-white text-sm my-8 px-8 py-3"
             >

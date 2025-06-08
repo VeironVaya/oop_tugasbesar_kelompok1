@@ -5,6 +5,15 @@ import Title from "../components/Title";
 const Checkout = () => {
   const { checkoutData, products, currency } = useContext(ShopContext);
 
+  if (!checkoutData || checkoutData.length === 0) {
+    return (
+      <div className="px-6 md:px-20 py-10 text-center">
+        <h2 className="text-xl font-semibold">Tidak ada data order.</h2>
+        <p>Silakan lakukan checkout dari halaman cart terlebih dahulu.</p>
+      </div>
+    );
+  }
+
   const totalHarga = checkoutData.reduce((total, item) => {
     const product = products.find((p) => p._id === item._id);
     return total + (product ? product.price * item.quantity : 0);
@@ -13,7 +22,7 @@ const Checkout = () => {
   return (
     <div className="px-6 md:px-20 py-10">
       <div className="text-2xl text-center pt-4 border-t mb-6">
-        <Title text1="CHECKOUT" text2="SUMMARY" />
+        <Title text1="MY" text2="ORDER" />
       </div>
 
       <div className="mb-6 text-gray-700">
@@ -21,8 +30,7 @@ const Checkout = () => {
           <b>Tanggal Transaksi:</b> {new Date().toLocaleDateString("id-ID")}
         </p>
         <p>
-          <b>Status Pembayaran:</b>{" "}
-          <span className="text-red-600">Belum Dibayar</span>
+          <b>Status Pembayaran:</b> <span className="text-red-600">UNPAID</span>
         </p>
       </div>
 
