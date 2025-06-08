@@ -54,7 +54,7 @@ const Navbar = () => {
           <NavLink to="/">HOME</NavLink>
           <NavLink to="/collection">COLLECTION</NavLink>
           <NavLink to="/about">ABOUT</NavLink>
-          <NavLink to="/contact">CONTACT</NavLink>
+          {/* <NavLink to="/contact">CONTACT</NavLink> */}
         </ul>
 
         {/* Right side */}
@@ -66,13 +66,18 @@ const Navbar = () => {
             onClick={handleSearchClick}
           />
 
-          <NavLink to="/cart">
-            <img
-              src={assets.cart_icon}
-              className="w-5 cursor-pointer"
-              alt="Cart"
-            />
-          </NavLink>
+          <img
+            src={assets.cart_icon}
+            className="w-5 cursor-pointer"
+            alt="Cart"
+            onClick={() => {
+              if (user) {
+                navigate("/cart");
+              } else {
+                navigate("/login");
+              }
+            }}
+          />
 
           {user ? (
             <div className="relative" ref={dropdownRef}>
