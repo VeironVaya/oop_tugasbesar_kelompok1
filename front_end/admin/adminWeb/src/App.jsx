@@ -7,6 +7,8 @@ import Add from "./pages/Add";
 import Order from "./pages/Order";
 import Navbar from "./components/navbar";
 import Sidebar from "./components/Sidebar";
+import Editdetails from "./pages/editdetails";
+import AddStock from "./pages/addstock";
 import { Route, Routes, useLocation } from "react-router-dom";
 import OrderDetail from "./pages/OrderDetail";
 
@@ -30,8 +32,10 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/listitems" element={<Listitems />} />
-            <Route path="/additems" element={<Add />} />
+            <Route path="/editdetails/:productId" element={<Editdetails />} />
             <Route path="/order/:id" element={<OrderDetail />} />
+            <Route path="/edit/:productId/addstock" element={<AddStock />} />
+            <Route path="/additems" element={<Add />} />
             <Route path="/orders" element={<Order />} />
           </Routes>
         </div>
