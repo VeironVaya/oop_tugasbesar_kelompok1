@@ -1,13 +1,13 @@
 import { createContext, useState, useEffect } from "react";
 import { products } from "../assets/assets";
-import { toast } from "react-toastify"; // ✅ penting
-import { useNavigate } from "react-router-dom"; // ✅ untuk navigate
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
   const currency = "$";
-  // const delivery_fee = 10;
+  const navigate = useNavigate();
 
   const [cartItems, setCartItems] = useState({});
   const [favoriteItems, setFavoriteItems] = useState([]);
@@ -15,12 +15,15 @@ const ShopContextProvider = (props) => {
   const [userRole, setUserRole] = useState(localStorage.getItem("role") || "");
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const navigate = useNavigate();
+  const [checkoutData, setCheckoutData] = useState(null); // ✅ Untuk checkout
 
   useEffect(() => {
     localStorage.setItem("role", userRole);
   }, [userRole]);
 
+  // ====================
+  // Cart & Favorites
+  // ====================
   const addToFavorites = (item) => {
     setFavoriteItems((prev) => {
       const exists = prev.some((fav) => fav._id === item._id);
@@ -51,24 +54,33 @@ const ShopContextProvider = (props) => {
       cartData[itemId] = {};
       cartData[itemId][size] = 1;
     }
+
     setCartItems(cartData);
   };
 
   const updateQuantity = async (itemId, size, quantity) => {
     let cartData = structuredClone(cartItems);
-    cartData[itemId][size] = quantity;
+    if (quantity <= 0) {
+      delete cartData[itemId][size];
+      if (Object.keys(cartData[itemId]).length === 0) {
+        delete cartData[itemId];
+      }
+    } else {
+      cartData[itemId][size] = quantity;
+    }
     setCartItems(cartData);
   };
 
+  // ====================
+  // Cart Summary
+  // ====================
   const getCartCount = () => {
     let totalCount = 0;
     for (const items in cartItems) {
       for (const item in cartItems[items]) {
-        try {
-          if (cartItems[items][item] > 0) {
-            totalCount += cartItems[items][item];
-          }
-        } catch (error) {}
+        if (cartItems[items][item] > 0) {
+          totalCount += cartItems[items][item];
+        }
       }
     }
     return totalCount;
@@ -79,19 +91,19 @@ const ShopContextProvider = (props) => {
     for (const items in cartItems) {
       let itemInfo = products.find((product) => product._id === items);
       for (const item in cartItems[items]) {
-        try {
-          if (cartItems[items][item] > 0) {
-            totalAmount += itemInfo.price * cartItems[items][item];
-          }
-        } catch (error) {}
+        if (cartItems[items][item] > 0) {
+          totalAmount += itemInfo.price * cartItems[items][item];
+        }
       }
     }
     return totalAmount;
   };
 
+  // ====================
+  // Context Value
+  // ====================
   const value = {
     currency,
-    // delivery_fee,
     products,
     cartItems,
     setCartItems,
@@ -111,6 +123,8 @@ const ShopContextProvider = (props) => {
     setSearch,
     showSearch,
     setShowSearch,
+    checkoutData, // ✅ akses checkout
+    setCheckoutData, // ✅ setter checkout
   };
 
   return (

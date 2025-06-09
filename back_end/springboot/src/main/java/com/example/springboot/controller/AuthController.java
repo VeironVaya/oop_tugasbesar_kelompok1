@@ -1,17 +1,24 @@
 package com.example.springboot.controller;
 
-import com.example.springboot.entity.Admin;
-import com.example.springboot.dto.request.LoginRequest;
-import com.example.springboot.dto.response.LoginResponse;
-import com.example.springboot.service.JwtService;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-import java.util.Date;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.springboot.dto.request.LoginRequest;
+import com.example.springboot.dto.response.LoginResponse;
+import com.example.springboot.entity.Admin;
+import com.example.springboot.service.JwtService;
 
 @RestController
 @RequestMapping("/api/v1/auth/login")
@@ -21,7 +28,7 @@ public class AuthController {
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager,
-                          JwtService jwtService) {
+            JwtService jwtService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
@@ -38,9 +45,7 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
+                            loginRequest.getPassword()));
 
             // 2. Jika berhasil, set ke context
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -62,8 +67,8 @@ public class AuthController {
             LoginResponse responseBody = new LoginResponse(false, "Login Failed", null);
 
             return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(responseBody);
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(responseBody);
         }
     }
 }
