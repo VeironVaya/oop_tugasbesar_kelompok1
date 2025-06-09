@@ -35,7 +35,8 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    // Generate token hanya berdasarkan UserDetails (misalnya Admin yang implements UserDetails)
+    // Generate token hanya berdasarkan UserDetails (misalnya Admin yang implements
+    // UserDetails)
     public String generateToken(UserDetails userDetails) {
         return buildToken(userDetails.getUsername());
     }
@@ -46,14 +47,15 @@ public class JwtService {
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
 
         return Jwts.builder()
-                .setSubject(subject)         // masukkan username sebagai subject
-                .setIssuedAt(now)            // waktu dikeluarkan
-                .setExpiration(expiryDate)   // waktu kadaluarsa
+                .setSubject(subject) // masukkan username sebagai subject
+                .setIssuedAt(now) // waktu dikeluarkan
+                .setExpiration(expiryDate) // waktu kadaluarsa
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Validasi token: cek username di token sama dengan username di userDetails, dan belum expired
+    // Validasi token: cek username di token sama dengan username di userDetails,
+    // dan belum expired
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
@@ -68,6 +70,7 @@ public class JwtService {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
+
     // Token expired
     public Date getTokenExpirationDate() {
         return new Date(System.currentTimeMillis() + jwtExpiration);
@@ -76,10 +79,10 @@ public class JwtService {
     // Ambil semua klaim (parsing token)
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-                   .setSigningKey(getSignInKey())
-                   .build()
-                   .parseClaimsJws(token)
-                   .getBody();
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     // Ubah secretKey Base64 string menjadi Key objek

@@ -1,0 +1,128 @@
+package com.example.springboot.service;
+
+import com.example.springboot.dto.response.CartItemResponseDto;
+import com.example.springboot.dto.response.CartWithCartItemDto;
+import com.example.springboot.entity.Cart;
+import com.example.springboot.entity.CartItem;
+import com.example.springboot.entity.Customer;
+import com.example.springboot.entity.Stock;
+import com.example.springboot.repository.CartItemRepository;
+import com.example.springboot.repository.CartRepository;
+import com.example.springboot.repository.CustomerRepository;
+import com.example.springboot.repository.StockRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import com.example.springboot.dto.response.CartResponseDto;
+
+@Service
+@Transactional
+public class CartService {
+    private final CustomerRepository customerRepository;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final StockRepository stockRepository;
+
+    public CartService(CustomerRepository customerRepository,
+            CartRepository cartRepository,
+            CartItemRepository cartItemRepository,
+            StockRepository stockRepository) {
+        this.customerRepository = customerRepository;
+        this.cartRepository = cartRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.stockRepository = stockRepository;
+    }
+
+    public CartWithCartItemDto postProductToCart(Long idCustomer, Long idStock) {
+        Customer customer = customerRepository.findById(idCustomer)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + idCustomer));
+
+        Cart cart = cartRepository.findByCustomer(customer)
+                .orElseGet(() -> {
+                    Cart newCart = new Cart();
+                    newCart.setCustomer(customer);
+                    newCart.setTotal_price(0.0);
+                    return cartRepository.save(newCart);
+                });
+
+        Stock stock = stockRepository.findById(idStock)
+                .orElseThrow(() -> new EntityNotFoundException("Stock not found: " + idStock));
+
+        if (stock.getStock_quantity() <= 0) {
+            throw new IllegalStateException("Item is out of stock: " + idStock);
+        }
+
+        Optional<CartItem> maybeItem = cartItemRepository.findByCartAndStock(cart, stock);
+        if (maybeItem.isPresent()) {
+            CartItem existing = maybeItem.get();
+            existing.setItem_quantity(existing.getItem_quantity() + 1);
+            cartItemRepository.save(existing);
+        } else {
+            CartItem newItem = new CartItem();
+            newItem.setCart(cart);
+            newItem.setStock(stock);
+            newItem.setItem_quantity(1);
+            cart.getItems().add(newItem);
+            cartItemRepository.save(newItem);
+        }
+
+        stock.setStock_quantity(stock.getStock_quantity() - 1);
+        stockRepository.save(stock);
+
+        double sum = 0.0;
+        for (CartItem ci : cart.getItems()) {
+            double unitPrice = ci.getStock().getProduct().getPrice();
+            sum += unitPrice * ci.getItem_quantity();
+        }
+        cart.setTotal_price(sum);
+        cart = cartRepository.save(cart);
+
+        return mapCartToDto(cart);
+    }
+
+    private CartWithCartItemDto mapCartToDto(Cart cart) {
+        CartWithCartItemDto dto = new CartWithCartItemDto();
+        dto.setStatus(true);
+        dto.setMessage("item successfully added to cart"); // or “retrieved cart” if using getCartForCustomer
+        dto.setIdCart(cart.getIdCart());
+        dto.setCartTotalPrice(String.valueOf(cart.getTotal_price()));
+
+        List<CartItemResponseDto> itemDtos = cart.getItems().stream()
+                .map(this::mapCartItemToDto)
+                .collect(Collectors.toList());
+        dto.setItems(itemDtos);
+
+        return dto;
+    }
+
+    private CartItemResponseDto mapCartItemToDto(CartItem ci) {
+        CartItemResponseDto ciDto = new CartItemResponseDto();
+        ciDto.setIdCartItem(ci.getId_cart_item());
+
+        // Pull Product fields from ci.getStock().getProduct()
+        String name = ci.getStock().getProduct().getName();
+        String description = ci.getStock().getProduct().getDescription();
+        Double price = ci.getStock().getProduct().getPrice();
+        String category = ci.getStock().getProduct().getCategory();
+
+        ciDto.setName(name);
+        ciDto.setDescription(description);
+        ciDto.setPrice(price);
+        ciDto.setCategory(category);
+
+        // Stock-level fields
+        ciDto.setStockQuantity(ci.getStock().getStock_quantity());
+
+        // CartItem-level quantity
+        ciDto.setItemQuantity(ci.getItem_quantity());
+
+        return ciDto;
+    }
+}
