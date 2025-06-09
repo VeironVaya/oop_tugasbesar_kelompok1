@@ -22,8 +22,7 @@ public class StockService {
 
     public StockService(
             StockRepository stockRepository,
-            ProductRepository productRepository
-    ) {
+            ProductRepository productRepository) {
         this.stockRepository = stockRepository;
         this.productRepository = productRepository;
     }
@@ -36,15 +35,15 @@ public class StockService {
         if (dto.getStockQuantity() < 0) {
             throw new InvalidDataException("Stock must be non-negative");
         }
- 
-            stockRepository.findByProduct_IdProductAndSize(productId, dto.getSize())
-      .ifPresent(existing -> {
-        throw new InvalidDataException("Size “" + dto.getSize() + "” already exists for this product");
-      });
+
+        stockRepository.findByProduct_IdProductAndSize(productId, dto.getSize())
+                .ifPresent(existing -> {
+                    throw new InvalidDataException("Size “" + dto.getSize() + "” already exists for this product");
+                });
 
         Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-            "Product not found with id: " + productId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Product not found with id: " + productId));
 
         Stock stock = new Stock();
         stock.setProduct(product);
