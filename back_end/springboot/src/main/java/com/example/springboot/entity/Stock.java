@@ -22,7 +22,7 @@ import lombok.Setter;
 public class Stock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_stock;
+    private Long idStock;
 
     // Many Stock rows refer to one Product
     @ManyToOne(fetch = FetchType.LAZY)
