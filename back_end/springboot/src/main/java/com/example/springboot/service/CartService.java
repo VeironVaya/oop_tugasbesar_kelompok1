@@ -63,18 +63,23 @@ public class CartService {
         if (maybeItem.isPresent()) {
             CartItem existing = maybeItem.get();
             existing.setItem_quantity(existing.getItem_quantity() + 1);
+            if (stock.getStock_quantity() < existing.getItem_quantity()) {
+                throw new IllegalStateException("Item quantity cannot be larger than stock quantity " + idStock);
+            }
             cartItemRepository.save(existing);
         } else {
             CartItem newItem = new CartItem();
+
+            newItem.setItem_quantity(1);
+
+            if (stock.getStock_quantity() < newItem.getItem_quantity()) {
+                throw new IllegalStateException("Item quantity cannot be larger than stock quantity " + idStock);
+            }
             newItem.setCart(cart);
             newItem.setStock(stock);
-            newItem.setItem_quantity(1);
             cart.getItems().add(newItem);
             cartItemRepository.save(newItem);
         }
-
-        stock.setStock_quantity(stock.getStock_quantity() - 1);
-        stockRepository.save(stock);
 
         double sum = 0.0;
         for (CartItem ci : cart.getItems()) {
@@ -124,5 +129,18 @@ public class CartService {
         ciDto.setItemQuantity(ci.getItem_quantity());
 
         return ciDto;
+    }
+
+    public CartWithCartItemDto getCartWithItems(Long idCustomer) {
+        Customer customer = customerRepository.findById(idCustomer)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + idCustomer));
+
+        Cart cart = cartRepository.findByCustomer(customer)
+                .orElseThrow(() -> new EntityNotFoundException("Cart not found for customer ID: " + idCustomer));
+
+        CartWithCartItemDto dto = mapCartToDto(cart);
+        dto.setMessage("Cart retrieved successfully");
+
+        return dto;
     }
 }

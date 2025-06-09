@@ -2,6 +2,7 @@ package com.example.springboot.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,14 +26,14 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    @PostMapping("/{idCustomer}/carts/stocks/{stockId}")
+    @PostMapping("/{idCustomer}/carts/stocks/{idStock}")
     public ResponseEntity<CartWithCartItemDto> postProductToCart(
-            @PathVariable Long customerId,
-            @PathVariable Long stockId) {
+            @PathVariable Long idCustomer,
+            @PathVariable Long idStock) {
 
         try {
             // Delegate to service; it returns a fully populated CartWithCartItemDto.
-            CartWithCartItemDto dto = cartService.postProductToCart(customerId, stockId);
+            CartWithCartItemDto dto = cartService.postProductToCart(idCustomer, idStock);
 
             // We assume service already set status=true and a “success” message.
             // But if you want to override:
@@ -82,8 +83,10 @@ public class CartController {
         } catch (Exception ex) {
             // Fallback for any other errors
             CartWithCartItemDto error = new CartWithCartItemDto();
+            ex.printStackTrace();
             error.setStatus(false);
-            error.setMessage("An unexpected error occurred");
+            error.setMessage(
+                    "Unexpected error [" + ex.getClass().getSimpleName() + "]: " + ex.getMessage());
             error.setIdCart(null);
             error.setCartTotalPrice("0.0");
             error.setItems(java.util.List.of());
@@ -92,4 +95,38 @@ public class CartController {
                     .body(error);
         }
     }
+
+    @GetMapping("/{idCustomer}/carts")
+    public ResponseEntity<CartWithCartItemDto> getCartWithItems(@PathVariable Long idCustomer) {
+        try {
+            CartWithCartItemDto dto = cartService.getCartWithItems(idCustomer); // Only one cart per customer
+            dto.setStatus(true);
+            dto.setMessage("Cart retrieved successfully");
+            return ResponseEntity.ok(dto);
+
+        } catch (EntityNotFoundException ex) {
+            CartWithCartItemDto error = new CartWithCartItemDto();
+            error.setStatus(false);
+            error.setMessage("Not found: " + ex.getMessage());
+            error.setIdCart(null);
+            error.setCartTotalPrice("0.0");
+            error.setItems(java.util.List.of());
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(error);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            CartWithCartItemDto error = new CartWithCartItemDto();
+            error.setStatus(false);
+            error.setMessage("Unexpected error [" + ex.getClass().getSimpleName() + "]: " + ex.getMessage());
+            error.setIdCart(null);
+            error.setCartTotalPrice("0.0");
+            error.setItems(java.util.List.of());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(error);
+        }
+    }
+
 }

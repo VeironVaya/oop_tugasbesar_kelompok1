@@ -1,5 +1,6 @@
 package com.example.springboot.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -33,5 +34,5 @@ public class Cart {
 
     // One Cart can have many CartItem entries
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CartItem> items;
+    private List<CartItem> items = new ArrayList<>();
 }
