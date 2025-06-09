@@ -26,6 +26,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+        String path = request.getServletPath();
+
+        // ⛔ Skip filter untuk endpoint publik
+        if (path.equals("/api/v1/customers/registration")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         try {
             // 1. Ambil header "Authorization"
             String authHeader = request.getHeader("Authorization");

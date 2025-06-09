@@ -11,19 +11,27 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "customer")
 @Getter
 @Setter
+@NoArgsConstructor
 public class Customer {
+    // ini constructor khusus buat regis doang
+    public Customer(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_customer;
 
     @Column(nullable = false, unique = true)
-    private String user_name;
+    private String username;
 
     @Column(nullable = false)
     private String password;
