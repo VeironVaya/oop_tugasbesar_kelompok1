@@ -1,14 +1,16 @@
-package com.example.springboot.dto;
+package com.example.springboot.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ProductDto {
+public class ProductWithStockRequestDto {
     private String name;
     private String description;
     private double price;
     private String category;
+    private String size;
+    private int stockQuantity;
 }
 

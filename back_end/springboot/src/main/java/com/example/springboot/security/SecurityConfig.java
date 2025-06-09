@@ -1,24 +1,70 @@
 package com.example.springboot.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.example.springboot.service.CustomUserDetailsService;
+import com.example.springboot.service.JwtService;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
+    private final CustomUserDetailsService userDetailsService;
+    private final JwtService jwtService;
 
+    @Autowired
+    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtService jwtService) {
+        this.userDetailsService = userDetailsService;
+        this.jwtService = jwtService;
+    }
+
+    // 1. Bean untuk encode password (BCrypt)
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    // 2. AuthenticationManager, daftarkan userDetailsService + passwordEncoder
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    // 3. Bean untuk filter JWT
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService, userDetailsService);
+    }
+
+    // 4. Konfigurasi HTTP security
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            )
-            .csrf(csrf -> csrf.disable()) // disables CSRF using the new lambda style
-            .httpBasic(Customizer.withDefaults()); // optional: enables basic auth
+                .csrf(csrf -> csrf.disable()) // nonaktifkan CSRF karena kita pakai token
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // 1) Izinkan siapa pun memanggil GET /api/v1/products
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
+                        // 2) Izinkan login tanpa token
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-admin").permitAll()
+                        // 3) Semua endpoint lain wajib autentikasi
+
+                        .anyRequest().authenticated())
+                // Pasang filter JWT sebelum UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
