@@ -18,7 +18,7 @@ public class CustomerService {
 
     public CustomerResponseDto register(CustomerDto dto) {
         if (repo.findByUsername(dto.getUsername()).isPresent()) {
-            throw new InvalidDataException("Username " + dto.getUsername() + " sudah terdaftar");
+            throw new InvalidDataException("Username " + dto.getUsername() + " already exist");
         }
         ;
 
@@ -28,6 +28,6 @@ public class CustomerService {
         Customer saved = repo.save(customer);
 
         return new CustomerResponseDto(true, saved.getIdCustomer(), saved.getUsername(),
-                "Registrasi berhasil pada " + Instant.now().toString());
+                "Registration Success on " + Instant.now().toString());
     }
 }
