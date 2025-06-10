@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.springboot.dto.request.LoginRequest;
 import com.example.springboot.dto.response.LoginResponse;
 import com.example.springboot.entity.Admin;
+import com.example.springboot.entity.Customer;
 import com.example.springboot.service.JwtService;
 
 @RestController
@@ -51,7 +52,11 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // 3. Ambil object Admin (karena Admin implements UserDetails)
-            Admin admin = (Admin) authentication.getPrincipal();
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Admin)) {
+                throw new BadCredentialsException("Wrong Username or Password");
+            }
+            Admin admin = (Admin) principal;;
 
             // 4. Generate JWT via JwtService
             String token = jwtService.generateToken(admin);
@@ -60,11 +65,46 @@ public class AuthController {
             Date expiredAt = jwtService.getTokenExpirationDate();
 
             LoginResponse.TokenData tokenData = new LoginResponse.TokenData(token, expiredAt, "Bearer");
-            LoginResponse responseBody = new LoginResponse(true, "Login Success", tokenData);
+            LoginResponse responseBody = new LoginResponse(true, "Login Success", null, tokenData);
 
             return ResponseEntity.ok(responseBody);
         } catch (BadCredentialsException ex) {
-            LoginResponse responseBody = new LoginResponse(false, "Login Failed", null);
+            LoginResponse responseBody = new LoginResponse(false, "Wrong Username or Password", null, null);
+
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(responseBody);
+        }   
+    }
+
+    @PostMapping("/login-customer")
+    public ResponseEntity<LoginResponse> loginCustomer(@RequestBody LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword()
+                )
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Customer)) {
+                throw new BadCredentialsException("Wrong Username or Password");
+            }
+            Customer customer = (Customer) principal;
+
+            String token = jwtService.generateToken(customer);
+
+            Date expiredAt = jwtService.getTokenExpirationDate();
+
+            LoginResponse.TokenData tokenData = new LoginResponse.TokenData(token, expiredAt, "Bearer");
+            LoginResponse responseBody = new LoginResponse(true, "Login Success", customer.getId_customer(), tokenData);
+            
+            return ResponseEntity.ok(responseBody);
+        } catch (BadCredentialsException ex) {
+            LoginResponse responseBody = new LoginResponse(false, "Wrong Username or Password", null, null);
 
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
