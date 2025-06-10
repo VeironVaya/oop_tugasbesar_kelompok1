@@ -41,7 +41,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         // ⛔ Skip filter untuk endpoint publik
 
-        if (path.equals("/api/v1/customers/registration")) {
+        if (path.equals("/api/v1/auth/login/**")
+        || path.equals("/api/v1/customers/registration")
+        || (request.getMethod().equalsIgnoreCase("GET") && path.equals("/api/v1/products"))) {
             filterChain.doFilter(request, response);
             return;
         }

@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import com.example.springboot.service.CustomUserDetailsService;
 import com.example.springboot.service.JwtService;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -58,17 +60,41 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable()) // nonaktifkan CSRF karena kita pakai token
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .exceptionHandling(ex -> ex
+                // 401 Unauthorized: ketika tidak ada/invalid token
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    // kirim JSON: {"status":false,"message":"Unauthorized"}
+                    String body = "{\"status\":false,\"message\":\"Unauthorized: Full authentication is required to access this resource\"}";
+                    response.getWriter().write(body);
+                })
+                // 403 Forbidden: ketika token valid tapi authority tidak cocok
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    // kirim JSON: {"status":false,"message":"Forbidden"}
+                    String body = "{\"status\":false,\"message\":\"Forbidden: Access is denied\"}";
+                    response.getWriter().write(body);
+                })
+            )
+
                 .authorizeHttpRequests(auth -> auth
-                        // 1) Izinkan siapa pun memanggil GET /api/v1/products
+                        // Public Endpoints:
                         .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
-                        // 2) Izinkan login tanpa token
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-admin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-customer").permitAll()
-                        // 3) Izinkan registrasi customer tanpa token
                         .requestMatchers(HttpMethod.POST, "/api/v1/customers/registration").permitAll()
-                        // 4) Semua endpoint lain wajib autentikasi
+
+                        // Role-based Endpoints:
+                        .requestMatchers("/api/v1/customers/**").hasRole("CUSTOMER")
+
+                        // Sharing Endpoints
+                        
+
                         .anyRequest().authenticated())
-                // Pasang filter JWT sebelum UsernamePasswordAuthenticationFilter
+                
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
