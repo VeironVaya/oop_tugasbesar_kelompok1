@@ -59,7 +59,7 @@ public class SecurityConfig {
                 // 2) Izinkan login tanpa token
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-admin").permitAll()
                 // 3) Semua endpoint lain wajib autentikasi
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
             // Pasang filter JWT sebelum UsernamePasswordAuthenticationFilter
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

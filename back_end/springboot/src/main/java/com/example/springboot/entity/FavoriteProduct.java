@@ -30,3 +30,4 @@ public class FavoriteProduct {
     @JoinColumn(name = "id_customer", nullable = false)
     private Customer customer;
 }
+
