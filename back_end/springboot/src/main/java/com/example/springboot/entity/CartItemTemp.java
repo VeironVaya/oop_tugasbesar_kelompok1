@@ -18,7 +18,7 @@ import lombok.Setter;
 public class CartItemTemp {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_cart_item_temp;
+    private Long idCartItemTemp;
 
     // Many temporary cart items belong to one TransactionHistory
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,6 +30,6 @@ public class CartItemTemp {
     @JoinColumn(name = "id_stock", nullable = false)
     private Stock stock;
 
-    private double total_price;
+    private double totalPrice;
     private int quantity;
 }

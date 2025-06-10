@@ -30,10 +30,10 @@ public class TransactionHistory {
     @JoinColumn(name = "id_customer", nullable = false)
     private Customer customer;
 
-    private double total_price;
+    private double totalPrice;
 
     // e.g. "PAID", "PENDING", etc.
-    private String payment_status;
+    private String paymentStatus;
 
     // Date of transaction
     private LocalDate date;
