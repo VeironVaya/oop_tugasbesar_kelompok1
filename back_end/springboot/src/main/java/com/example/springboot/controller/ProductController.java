@@ -15,12 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.springboot.dto.request.ProductRequestDto;
 import com.example.springboot.dto.request.ProductWithStockRequestDto;
 import com.example.springboot.dto.request.StockRequestDto;
 import com.example.springboot.dto.response.AddRemoveFavoriteResponseDto;
 import com.example.springboot.dto.response.ProductResponseDto;
 import com.example.springboot.dto.response.ProductWithCustomerResponseDto;
 import com.example.springboot.dto.response.ProductWithStockResponseDto;
+import com.example.springboot.dto.response.SimpleResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.exception.DuplicateFavoriteException;
@@ -29,7 +31,6 @@ import com.example.springboot.exception.ResourceNotFoundException;
 import com.example.springboot.service.FavoriteProductService;
 import com.example.springboot.service.ProductService;
 import com.example.springboot.service.StockService;
-
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -77,9 +78,7 @@ public class ProductController {
     @PostMapping("/{productId}/stocks")
     public ResponseEntity<?> postStockToProduct(
             @PathVariable Long productId,
-            @RequestBody StockRequestDto dto
-    ) 
-    {
+            @RequestBody StockRequestDto dto) {
 
         try {
             StockResponseDto saved = stockService.postStockToProduct(productId, dto);
@@ -97,7 +96,7 @@ public class ProductController {
                     .badRequest()
                     .body(error);
 
-        } 
+        }
 
     }
 
@@ -114,30 +113,79 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+    @DeleteMapping("/{idProduct}")
+    public ResponseEntity<?> deleteProduct(@PathVariable("idProduct") Long idProduct) {
+        try {
+            productService.deleteProduct(idProduct);
+            SimpleResponseDto response = new SimpleResponseDto();
+            response.setStatus(true);
+            response.setMessage("Product deleted successfully");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException ex) {
+            SimpleResponseDto response = new SimpleResponseDto();
+            response.setStatus(false);
+            response.setMessage("Deletion failed: " + ex.getMessage());
 
-    @DeleteMapping("/{id_product}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable("id_product") Long id_product) {
-    productService.deleteProduct(id_product);
-    return ResponseEntity.noContent().build();
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(response);
+        } catch (Exception ex) {
+            ProductWithStockResponseDto error = new ProductWithStockResponseDto();
+            error.setStatus(false);
+            error.setMessage("An unexpected error occurred");
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(error);
+        }
     }
 
-    @PatchMapping("/{id_product}")
-    public ResponseEntity<Product> patchProduct(@PathVariable("id_product") Long id, @RequestBody ProductWithStockRequestDto dto) {
-        Product updateProduct = productService.patchProduct(id, dto);
-        return ResponseEntity.ok(updateProduct);
+    @PatchMapping("/{idProduct}")
+    public ResponseEntity<?> patchProduct(
+            @PathVariable("idProduct") Long id,
+            @RequestBody ProductRequestDto dto) {
+        try {
+            ProductWithStockResponseDto updated = productService.patchProductWithStock(id, dto);
+            updated.setIdProduct(id);
+            updated.setMessage("Product updated successfully");
+            updated.setStatus(true);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException ex) {
+            ProductWithStockResponseDto response = new ProductWithStockResponseDto();
+            response.setStatus(false);
+            response.setMessage("Patch failed: " + ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal Server Error: " + e.getMessage());
+        }
     }
 
+    // another
     @GetMapping("/{id_product}")
-    public ResponseEntity<Product> getProductDetail(@PathVariable("id_product") long id) {
-        Product product = productService.getProductDetail(id);
-        return ResponseEntity.ok(product);
+    public ResponseEntity<?> getProductDetail(@PathVariable("id_product") long id) {
+
+        try {
+            ProductWithStockResponseDto product = productService.getProductWithStockResponseDto(id);
+            return ResponseEntity.ok(product);
+        } catch (IllegalArgumentException ex) {
+            ProductWithStockResponseDto response = new ProductWithStockResponseDto();
+            response.setStatus(false);
+            response.setMessage("Get failed: " + ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(response);
+        }
+
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<Product>> getSearchProduct(@RequestParam(required = false) String keyword) {
         List<Product> products = productService.getProductsByKeyword(keyword);
         return ResponseEntity.ok(products);
-}
+    }
 
     @GetMapping("/{id_product}/customer/{id_customer}")
     public ResponseEntity<ProductWithCustomerResponseDto> getProductDetailWstatus(

@@ -12,6 +12,7 @@ import com.example.springboot.entity.Product;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryIgnoreCase(String category);
+
     List<Product> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String name, String description);
 
     @Query(value = """
@@ -36,4 +37,3 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         @Param("customerId") Long customerId
     );
 }
-

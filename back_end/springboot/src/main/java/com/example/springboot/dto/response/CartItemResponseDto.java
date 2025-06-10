@@ -3,13 +3,14 @@ package com.example.springboot.dto.response;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Getter
 @Setter
 public class CartItemResponseDto {
-    private Long idCartItem;
+    private long idCartItem;
+    private String name;
+    private String description;
+    private Double price;
+    private String category;
+    private int stockQuantity;
     private int itemQuantity;
-
-    /** We embed one StockResponseDto (size + stockQuantity). */
-    private StockResponseDto stock;
 }

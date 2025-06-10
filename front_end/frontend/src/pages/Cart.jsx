@@ -5,8 +5,14 @@ import { assets } from "../assets/assets";
 import CartTotal from "../components/CartTotal";
 
 const Cart = () => {
-  const { products, currency, navigate, cartItems, updateQuantity } =
-    useContext(ShopContext);
+  const {
+    products,
+    currency,
+    navigate,
+    cartItems,
+    updateQuantity,
+    setCheckoutData, // tambahkan ini
+  } = useContext(ShopContext);
 
   const [cartData, setCartData] = useState([]);
 
@@ -23,7 +29,6 @@ const Cart = () => {
         }
       }
     }
-    console.log(tempData);
     setCartData(tempData);
   }, [cartItems]);
 
@@ -38,6 +43,7 @@ const Cart = () => {
           const productData = products.find(
             (product) => product._id === item._id
           );
+          if (!productData) return null;
 
           return (
             <div
@@ -65,6 +71,7 @@ const Cart = () => {
                   </div>
                 </div>
               </div>
+
               <div className="flex items-center gap-2">
                 <button
                   onClick={() =>
@@ -105,7 +112,10 @@ const Cart = () => {
           <CartTotal />
           <div className="w-full text-end">
             <button
-              onClick={() => navigate("/place-order")}
+              onClick={() => {
+                setCheckoutData(cartData); 
+                navigate("/checkout");
+              }}
               className="bg-black text-white text-sm my-8 px-8 py-3"
             >
               CHECKOUT

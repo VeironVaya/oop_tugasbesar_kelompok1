@@ -1,14 +1,15 @@
 package com.example.springboot.dto.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Used for creating/updating a Customer account.
- */
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CustomerDto {
-    private String userName;
+    private String username;
     private String password;
 }

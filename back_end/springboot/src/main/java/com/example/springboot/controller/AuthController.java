@@ -1,17 +1,25 @@
 package com.example.springboot.controller;
 
-import com.example.springboot.entity.Admin;
-import com.example.springboot.dto.request.LoginRequest;
-import com.example.springboot.dto.response.LoginResponse;
-import com.example.springboot.service.JwtService;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-import java.util.Date;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.springboot.dto.request.LoginRequest;
+import com.example.springboot.dto.response.LoginResponse;
+import com.example.springboot.entity.Admin;
+import com.example.springboot.entity.Customer;
+import com.example.springboot.service.JwtService;
 
 @RestController
 @RequestMapping("/api/v1/auth/login")
@@ -21,7 +29,7 @@ public class AuthController {
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager,
-                          JwtService jwtService) {
+            JwtService jwtService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
@@ -38,15 +46,17 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
+                            loginRequest.getPassword()));
 
             // 2. Jika berhasil, set ke context
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // 3. Ambil object Admin (karena Admin implements UserDetails)
-            Admin admin = (Admin) authentication.getPrincipal();
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Admin)) {
+                throw new BadCredentialsException("Wrong Username or Password");
+            }
+            Admin admin = (Admin) principal;;
 
             // 4. Generate JWT via JwtService
             String token = jwtService.generateToken(admin);
@@ -55,15 +65,50 @@ public class AuthController {
             Date expiredAt = jwtService.getTokenExpirationDate();
 
             LoginResponse.TokenData tokenData = new LoginResponse.TokenData(token, expiredAt, "Bearer");
-            LoginResponse responseBody = new LoginResponse(true, "Login Success", tokenData);
+            LoginResponse responseBody = new LoginResponse(true, "Login Success", null, tokenData);
 
             return ResponseEntity.ok(responseBody);
         } catch (BadCredentialsException ex) {
-            LoginResponse responseBody = new LoginResponse(false, "Login Failed", null);
+            LoginResponse responseBody = new LoginResponse(false, "Wrong Username or Password", null, null);
 
             return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(responseBody);
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(responseBody);
+        }   
+    }
+
+    @PostMapping("/login-customer")
+    public ResponseEntity<LoginResponse> loginCustomer(@RequestBody LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword()
+                )
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Customer)) {
+                throw new BadCredentialsException("Wrong Username or Password");
+            }
+            Customer customer = (Customer) principal;
+
+            String token = jwtService.generateToken(customer);
+
+            Date expiredAt = jwtService.getTokenExpirationDate();
+
+            LoginResponse.TokenData tokenData = new LoginResponse.TokenData(token, expiredAt, "Bearer");
+            LoginResponse responseBody = new LoginResponse(true, "Login Success", customer.getIdCustomer(), tokenData);
+            
+            return ResponseEntity.ok(responseBody);
+        } catch (BadCredentialsException ex) {
+            LoginResponse responseBody = new LoginResponse(false, "Wrong Username or Password", null, null);
+
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(responseBody);
         }
     }
 }
