@@ -100,7 +100,7 @@ public class AuthController {
             Date expiredAt = jwtService.getTokenExpirationDate();
 
             LoginResponse.TokenData tokenData = new LoginResponse.TokenData(token, expiredAt, "Bearer");
-            LoginResponse responseBody = new LoginResponse(true, "Login Success", customer.getId_customer(), tokenData);
+            LoginResponse responseBody = new LoginResponse(true, "Login Success", customer.getIdCustomer(), tokenData);
             
             return ResponseEntity.ok(responseBody);
         } catch (BadCredentialsException ex) {
