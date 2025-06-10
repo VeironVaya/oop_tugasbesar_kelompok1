@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
                         // 2) Izinkan login tanpa token
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-admin").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-customer").permitAll()
                         // 3) Izinkan registrasi customer tanpa token
                         .requestMatchers(HttpMethod.POST, "/api/v1/customers/registration").permitAll()
                         // 4) Semua endpoint lain wajib autentikasi

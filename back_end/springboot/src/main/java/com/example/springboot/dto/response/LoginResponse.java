@@ -8,7 +8,8 @@ import java.util.Date;
 @AllArgsConstructor
 public class LoginResponse {
     private boolean status;
-    private String message;  
+    private String message;
+    private Long id;  
     private TokenData data;
 
     @Getter
