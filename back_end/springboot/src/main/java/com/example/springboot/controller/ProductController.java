@@ -137,6 +137,9 @@ public class ProductController {
             @RequestBody ProductRequestDto dto) {
         try {
             ProductWithStockResponseDto updated = productService.patchProductWithStock(id, dto);
+            updated.setIdProduct(id);
+            updated.setMessage("Product updated successfully");
+            updated.setStatus(true);
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException ex) {
             ProductWithStockResponseDto response = new ProductWithStockResponseDto();
