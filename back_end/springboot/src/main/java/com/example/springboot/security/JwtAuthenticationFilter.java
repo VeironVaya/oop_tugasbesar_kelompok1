@@ -1,17 +1,23 @@
 package com.example.springboot.security;
 
-import com.example.springboot.service.JwtService;
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import java.io.IOException;
+
+import com.example.springboot.service.JwtService;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -25,15 +31,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getServletPath();
 
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         // ⛔ Skip filter untuk endpoint publik
+
         if (path.equals("/api/v1/customers/registration")) {
             filterChain.doFilter(request, response);
             return;
         }
-        
+
         try {
             // 1. Ambil header "Authorization"
             String authHeader = request.getHeader("Authorization");
@@ -41,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = null;
 
             if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
-                jwt = authHeader.substring(7);              // potong "Bearer "
+                jwt = authHeader.substring(7); // potong "Bearer "
                 username = jwtService.extractUsername(jwt); // ambil username (subject)
             }
 
@@ -52,11 +64,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 3. Validasi token
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     // Buat object authentication
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 

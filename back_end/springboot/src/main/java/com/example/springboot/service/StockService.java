@@ -52,7 +52,7 @@ public class StockService {
         Stock saved = stockRepository.save(stock);
 
         StockResponseDto response = new StockResponseDto();
-        response.setIdStock(saved.getId_stock());
+        response.setIdStock(saved.getIdStock());
         response.setSize(saved.getSize());
         response.setStockQuantity(saved.getStock_quantity());
         return response;

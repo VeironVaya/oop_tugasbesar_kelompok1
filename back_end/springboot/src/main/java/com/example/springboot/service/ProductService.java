@@ -67,7 +67,7 @@ public class ProductService {
         resp.setCategory(saved.getCategory());
 
         StockResponseDto stockDto = new StockResponseDto();
-        stockDto.setIdStock(savedStock.getId_stock());
+        stockDto.setIdStock(savedStock.getIdStock());
         stockDto.setSize(savedStock.getSize());
         stockDto.setStockQuantity(savedStock.getStock_quantity());
         resp.setStocks(List.of(stockDto));
@@ -127,7 +127,7 @@ public class ProductService {
                     StockResponseDto sd = new StockResponseDto();
                     sd.setStatus(true);
                     sd.setMessage("OK");
-                    sd.setIdStock(stock.getId_stock());
+                    sd.setIdStock(stock.getIdStock());
                     sd.setSize(stock.getSize());
                     sd.setStockQuantity(stock.getStock_quantity());
                     return sd;
@@ -161,7 +161,7 @@ public class ProductService {
                     dto.setStatus(true);
                     dto.setMessage("OK");
                     // map your actual stock properties:
-                    dto.setIdStock(stock.getId_stock());
+                    dto.setIdStock(stock.getIdStock());
                     dto.setSize(stock.getSize());
                     dto.setStockQuantity(stock.getStock_quantity());
                     return dto;

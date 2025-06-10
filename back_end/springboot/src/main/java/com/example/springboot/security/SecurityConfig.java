@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.example.springboot.service.CustomUserDetailsService;
 import com.example.springboot.service.JwtService;
@@ -51,23 +52,24 @@ public class SecurityConfig {
 
     // 4. Konfigurasi HTTP security
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource)
+            throws Exception {
         http
-            .csrf(csrf -> csrf.disable())  // nonaktifkan CSRF karena kita pakai token
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // 1) Izinkan siapa pun memanggil GET /api/v1/products
-                .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
-                // 2) Izinkan login tanpa token
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-admin").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-customer").permitAll()
-                // 3) Izinkan registrasi customer tanpa token
-                .requestMatchers(HttpMethod.POST, "/api/v1/customers/registration").permitAll()
-                // 4) Semua endpoint lain wajib autentikasi
-                .anyRequest().authenticated()
-            )
-            // Pasang filter JWT sebelum UsernamePasswordAuthenticationFilter
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(csrf -> csrf.disable()) // nonaktifkan CSRF karena kita pakai token
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // 1) Izinkan siapa pun memanggil GET /api/v1/products
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
+                        // 2) Izinkan login tanpa token
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-admin").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-customer").permitAll()
+                        // 3) Izinkan registrasi customer tanpa token
+                        .requestMatchers(HttpMethod.POST, "/api/v1/customers/registration").permitAll()
+                        // 4) Semua endpoint lain wajib autentikasi
+                        .anyRequest().authenticated())
+                // Pasang filter JWT sebelum UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

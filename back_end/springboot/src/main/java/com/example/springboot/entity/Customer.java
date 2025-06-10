@@ -19,7 +19,7 @@ import lombok.Setter;
 public class Customer implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_customer;
+    private Long idCustomer;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -28,8 +28,8 @@ public class Customer implements UserDetails {
     private String password;
 
     // One Customer can have many Carts
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Cart> carts;
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Cart cart;
 
     // One Customer can have many TransactionHistories
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)

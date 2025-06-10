@@ -19,13 +19,15 @@ public class CustomerService {
     public CustomerResponseDto register(CustomerDto dto) {
         if (repo.findByUsername(dto.getUsername()).isPresent()) {
             throw new InvalidDataException("Username " + dto.getUsername() + " sudah terdaftar");
-        };
+        }
+        ;
 
         String hashed = encoder.encode(dto.getPassword());
 
         Customer customer = new Customer(dto.getUsername(), hashed);
         Customer saved = repo.save(customer);
 
-        return new CustomerResponseDto(true, saved.getId_customer(), saved.getUsername(), "Registrasi berhasil pada " + Instant.now().toString());
+        return new CustomerResponseDto(true, saved.getIdCustomer(), saved.getUsername(),
+                "Registrasi berhasil pada " + Instant.now().toString());
     }
 }
