@@ -87,11 +87,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/customers/registration").permitAll()
 
                         // Role-based Endpoints:
-                        .requestMatchers("/api/v1/customers/**").hasRole("CUSTOMER")
+                        // .requestMatchers("/api/v1/customers/**").hasRole("CUSTOMER")
 
                         // Sharing Endpoints
 
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
 
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
