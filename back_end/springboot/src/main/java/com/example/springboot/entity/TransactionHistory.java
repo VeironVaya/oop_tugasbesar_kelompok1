@@ -23,7 +23,7 @@ import lombok.Setter;
 public class TransactionHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_transaction_history;
+    private Long idTransactionHistory;
 
     // Many TransactionHistory entries belong to one Customer
     @ManyToOne(fetch = FetchType.LAZY)

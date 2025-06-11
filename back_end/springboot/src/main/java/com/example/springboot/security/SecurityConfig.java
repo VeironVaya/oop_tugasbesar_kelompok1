@@ -62,23 +62,22 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .exceptionHandling(ex -> ex
-                // 401 Unauthorized: ketika tidak ada/invalid token
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
-                    // kirim JSON: {"status":false,"message":"Unauthorized"}
-                    String body = "{\"status\":false,\"message\":\"Unauthorized: Full authentication is required to access this resource\"}";
-                    response.getWriter().write(body);
-                })
-                // 403 Forbidden: ketika token valid tapi authority tidak cocok
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    // kirim JSON: {"status":false,"message":"Forbidden"}
-                    String body = "{\"status\":false,\"message\":\"Forbidden: Access is denied\"}";
-                    response.getWriter().write(body);
-                })
-            )
+                        // 401 Unauthorized: ketika tidak ada/invalid token
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            // kirim JSON: {"status":false,"message":"Unauthorized"}
+                            String body = "{\"status\":false,\"message\":\"Unauthorized: Full authentication is required to access this resource\"}";
+                            response.getWriter().write(body);
+                        })
+                        // 403 Forbidden: ketika token valid tapi authority tidak cocok
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            // kirim JSON: {"status":false,"message":"Forbidden"}
+                            String body = "{\"status\":false,\"message\":\"Forbidden: Access is denied\"}";
+                            response.getWriter().write(body);
+                        }))
 
                 .authorizeHttpRequests(auth -> auth
                         // Public Endpoints:
@@ -88,13 +87,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/customers/registration").permitAll()
 
                         // Role-based Endpoints:
-                        .requestMatchers("/api/v1/customers/**").hasRole("CUSTOMER")
+                        // .requestMatchers("/api/v1/customers/**").hasRole("CUSTOMER")
 
                         // Sharing Endpoints
-                        
 
-                        .anyRequest().authenticated())
-                
+                        .anyRequest().permitAll())
+
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
