@@ -16,6 +16,9 @@ import com.example.springboot.entity.Stock;
 import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.repository.ProductRepository;
 import com.example.springboot.repository.StockRepository;
+import com.example.springboot.dto.response.ProductWithCustomerResponseDto;
+import com.example.springboot.exception.ResourceNotFoundException;
+
 
 @Service
 @Transactional
@@ -174,5 +177,13 @@ public class ProductService {
     public List<Product> getProductsByKeyword(String keyword) {
         return productRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
     }
+
+    public ProductWithCustomerResponseDto getProductDetailWstatus(Long productId, Long customerId) {
+        return productRepository.findDetailWithFavorite(productId, customerId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Product dengan id %d untuk customer %d tidak ditemukan".formatted(productId, customerId)
+            ));
+    }
+
 
 }

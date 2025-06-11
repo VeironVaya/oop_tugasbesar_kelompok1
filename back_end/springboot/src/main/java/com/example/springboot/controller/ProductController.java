@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,12 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.springboot.dto.request.ProductRequestDto;
 import com.example.springboot.dto.request.ProductWithStockRequestDto;
 import com.example.springboot.dto.request.StockRequestDto;
+import com.example.springboot.dto.response.AddRemoveFavoriteResponseDto;
 import com.example.springboot.dto.response.ProductResponseDto;
+import com.example.springboot.dto.response.ProductWithCustomerResponseDto;
 import com.example.springboot.dto.response.ProductWithStockResponseDto;
 import com.example.springboot.dto.response.SimpleResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
+import com.example.springboot.exception.DuplicateFavoriteException;
 import com.example.springboot.exception.InvalidDataException;
+import com.example.springboot.exception.ResourceNotFoundException;
+import com.example.springboot.service.FavoriteProductService;
 import com.example.springboot.service.ProductService;
 import com.example.springboot.service.StockService;
 
@@ -32,10 +38,12 @@ public class ProductController {
 
     private final ProductService productService;
     private final StockService stockService;
+    private final FavoriteProductService favoriteProductService;
 
-    public ProductController(ProductService productService, StockService stockService) {
+    public ProductController(ProductService productService,StockService stockService,FavoriteProductService favoriteProductService) {
         this.productService = productService;
         this.stockService = stockService;
+        this.favoriteProductService = favoriteProductService;
     }
 
     @PostMapping
@@ -178,5 +186,55 @@ public class ProductController {
         List<Product> products = productService.getProductsByKeyword(keyword);
         return ResponseEntity.ok(products);
     }
+
+    @GetMapping("/{id_product}/customer/{id_customer}")
+    public ResponseEntity<ProductWithCustomerResponseDto> getProductDetailWstatus(
+        @PathVariable("id_product") Long productId,
+        @PathVariable("id_customer") Long customerId
+    ) {
+        ProductWithCustomerResponseDto dto =
+            productService.getProductDetailWstatus(productId, customerId);
+        return ResponseEntity.ok(dto);
+    }
+    @PostMapping("/{productId}/customer/{customerId}/favorites")
+    public ResponseEntity<AddRemoveFavoriteResponseDto> postFavorite(
+            @PathVariable Long productId,
+            @PathVariable Long customerId) {
+        try {
+            AddRemoveFavoriteResponseDto response =
+                favoriteProductService.addFavorite(productId, customerId);
+            return ResponseEntity.ok(response);
+        } catch (DuplicateFavoriteException ex) {
+            AddRemoveFavoriteResponseDto dto = new AddRemoveFavoriteResponseDto();
+            dto.setStatus(false);
+            dto.setMessage(ex.getMessage());
+            dto.setFavorite(true);  
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(dto);
+        }
+    }
+    
+    @DeleteMapping("/{productId}/customer/{customerId}/favorites")
+    public ResponseEntity<AddRemoveFavoriteResponseDto> deleteFavorite(
+        @PathVariable Long productId,
+        @PathVariable Long customerId) {
+
+        try {
+            AddRemoveFavoriteResponseDto response =
+                favoriteProductService.removeFavorite(productId, customerId);
+            return ResponseEntity.ok(response);
+
+        } catch (ResourceNotFoundException ex) {
+            AddRemoveFavoriteResponseDto dto = new AddRemoveFavoriteResponseDto();
+            dto.setStatus(false);
+            dto.setMessage(ex.getMessage());
+            dto.setFavorite(false);
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(dto);
+    }
+}
+
 
 }
