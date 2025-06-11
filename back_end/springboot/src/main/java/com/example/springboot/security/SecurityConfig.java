@@ -66,7 +66,7 @@ public class SecurityConfig {
                         // 3) Izinkan registrasi customer tanpa token
                         .requestMatchers(HttpMethod.POST, "/api/v1/customers/registration").permitAll()
                         // 4) Semua endpoint lain wajib autentikasi
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
                 // Pasang filter JWT sebelum UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

@@ -1,10 +1,11 @@
 package com.example.springboot.repository;
 
-import com.example.springboot.entity.Cart;
-import com.example.springboot.entity.Customer;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import com.example.springboot.entity.Cart;
+import com.example.springboot.entity.Customer;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
     /**
