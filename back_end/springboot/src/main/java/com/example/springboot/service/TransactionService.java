@@ -110,6 +110,8 @@ public class TransactionService {
 
         // 5) Clear the cart
         cartItemRepo.deleteAll(items);
+        cart.setTotal_price(0.0);
+        cartRepo.save(cart);
 
         // 6) Build & return DTO
         List<CartItemTempResponseDto> lineDtos = temps.stream()

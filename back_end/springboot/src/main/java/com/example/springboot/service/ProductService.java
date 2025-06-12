@@ -1,5 +1,6 @@
 package com.example.springboot.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,16 +10,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.springboot.dto.request.ProductRequestDto;
 import com.example.springboot.dto.request.ProductWithStockRequestDto;
 import com.example.springboot.dto.response.ProductResponseDto;
+import com.example.springboot.dto.response.ProductWithCustomerResponseDto;
 import com.example.springboot.dto.response.ProductWithStockResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.entity.Stock;
 import com.example.springboot.exception.InvalidDataException;
+import com.example.springboot.exception.ResourceNotFoundException;
 import com.example.springboot.repository.ProductRepository;
 import com.example.springboot.repository.StockRepository;
-import com.example.springboot.dto.response.ProductWithCustomerResponseDto;
-import com.example.springboot.exception.ResourceNotFoundException;
-
 
 @Service
 @Transactional
@@ -174,16 +174,33 @@ public class ProductService {
         return resp;
     }
 
-    public List<Product> getProductsByKeyword(String keyword) {
-        return productRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
-    }
-
     public ProductWithCustomerResponseDto getProductDetailWstatus(Long productId, Long customerId) {
         return productRepository.findDetailWithFavorite(productId, customerId)
-            .orElseThrow(() -> new ResourceNotFoundException(
-                "Product dengan id %d untuk customer %d tidak ditemukan".formatted(productId, customerId)
-            ));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product dengan id %d untuk customer %d tidak ditemukan".formatted(productId, customerId)));
     }
 
+    public List<ProductResponseDto> getProductsByKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Product> products = productRepository
+                .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+
+        return products.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    private ProductResponseDto convertToDto(Product product) {
+        ProductResponseDto dto = new ProductResponseDto();
+        dto.setIdProduct(product.getIdProduct());
+        dto.setName(product.getName());
+        dto.setDescription(product.getDescription());
+        dto.setPrice(product.getPrice());
+        dto.setCategory(product.getCategory());
+        return dto;
+    }
 
 }

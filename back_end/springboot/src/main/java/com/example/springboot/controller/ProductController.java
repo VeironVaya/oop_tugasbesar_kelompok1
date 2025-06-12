@@ -23,7 +23,6 @@ import com.example.springboot.dto.response.ProductWithCustomerResponseDto;
 import com.example.springboot.dto.response.ProductWithStockResponseDto;
 import com.example.springboot.dto.response.SimpleResponseDto;
 import com.example.springboot.dto.response.StockResponseDto;
-import com.example.springboot.entity.Product;
 import com.example.springboot.exception.DuplicateFavoriteException;
 import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.exception.ResourceNotFoundException;
@@ -182,8 +181,8 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Product>> getSearchProduct(@RequestParam(required = false) String keyword) {
-        List<Product> products = productService.getProductsByKeyword(keyword);
+    public ResponseEntity<List<ProductResponseDto>> getSearchProduct(@RequestParam(required = false) String keyword) {
+        List<ProductResponseDto> products = productService.getProductsByKeyword(keyword);
         return ResponseEntity.ok(products);
     }
 
