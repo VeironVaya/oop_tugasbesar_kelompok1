@@ -10,7 +10,7 @@ import Login from "./pages/Login";
 import Navbar from "./components/Navbar";
 import MyFavorite from "./pages/MyFavorite";
 import Checkout from "./pages/Checkout";
-import Regist from "./pages/Regist";
+import Orders from "./pages/Orders";
 
 const App = () => {
   return (
@@ -24,9 +24,10 @@ const App = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/product/:productId" element={<Product />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
+        {/* <Route path="/checkout" element={<Checkout />} /> */}
         <Route path="/login" element={<Login />} />
-        <Route path="/regist" element={<Regist />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/checkout/:id" element={<Checkout />} />
       </Routes>
     </div>
   );
