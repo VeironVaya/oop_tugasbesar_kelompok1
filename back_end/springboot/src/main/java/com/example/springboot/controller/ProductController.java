@@ -146,12 +146,12 @@ public class ProductController {
             updated.setMessage("Product updated successfully");
             updated.setStatus("true");
             return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException ex) {
+        } catch (InvalidDataException ex) {
             ProductWithStockResponseDto response = new ProductWithStockResponseDto();
             response.setStatus("false");
-            response.setMessage("Patch failed: " + ex.getMessage());
+            response.setMessage("Invalid product data: " + ex.getMessage());
             return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
+                    .badRequest()
                     .body(response);
         } catch (Exception e) {
             e.printStackTrace();
