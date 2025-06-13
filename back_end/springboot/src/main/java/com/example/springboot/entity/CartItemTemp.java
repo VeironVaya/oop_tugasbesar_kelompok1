@@ -1,5 +1,8 @@
 package com.example.springboot.entity;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -28,6 +31,7 @@ public class CartItemTemp {
     // Many temporary cart items refer to one Stock
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_stock", nullable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Stock stock;
 
     private double totalPrice;

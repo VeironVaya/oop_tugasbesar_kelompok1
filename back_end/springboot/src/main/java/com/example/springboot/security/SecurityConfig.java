@@ -80,6 +80,7 @@ public class SecurityConfig {
                         }))
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Public Endpoints:
                         .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-admin").permitAll()
