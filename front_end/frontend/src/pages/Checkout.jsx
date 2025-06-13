@@ -72,12 +72,6 @@ const Checkout = () => {
           {totalHarga.toLocaleString("id-ID")}
         </span>
       </div>
-
-      <div className="text-center mt-8">
-        <button className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
-          Bayar Sekarang
-        </button>
-      </div>
     </div>
   );
 };
