@@ -4,6 +4,14 @@ import ProductItem from "../components/ProductItem";
 import { assets } from "../assets/assets";
 import axios from "axios";
 
+// Daftar dummy image (isi sesuai assets kamu)
+const dummyImages = [
+  assets.dummy1,
+  assets.dummy2,
+  assets.dummy3,
+  assets.dummy4,
+];
+
 const CATEGORY_MAP = {
   Topwear: "TopWare",
   Bottomwear: "BottomWare",
@@ -11,22 +19,15 @@ const CATEGORY_MAP = {
   Accessories: "accessories",
 };
 
+const categoryList = ["Topwear", "Bottomwear", "Footwear", "Accessories"];
+
 const Collection = () => {
   const [filterProducts, setFilterProducts] = useState([]);
-  const [subCategory, setSubCategory] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(""); // hanya satu
   const [showFilter, setShowFilter] = useState(false);
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Toggle Subcategory Filter
-  const toggleSubCategory = (e) => {
-    if (subCategory.includes(e.target.value)) {
-      setSubCategory((prev) => prev.filter((a) => a !== e.target.value));
-    } else {
-      setSubCategory((prev) => [...prev, e.target.value]);
-    }
-  };
 
   // Fetch API sesuai filter
   useEffect(() => {
@@ -35,10 +36,9 @@ const Collection = () => {
 
       try {
         let apiUrl = "http://localhost:8080/api/v1/products";
-        // Jika ada filter kategori, kirim ?category=xxx (atau jika >1, bisa pakai array) 9NTAR SESUAIIN LAGI SETELAH QA PROCESS)
-        if (subCategory.length === 1) {
+        if (selectedCategory) {
           apiUrl += `?category=${encodeURIComponent(
-            CATEGORY_MAP[subCategory[0]] || subCategory[0]
+            CATEGORY_MAP[selectedCategory] || selectedCategory
           )}`;
         }
 
@@ -52,15 +52,6 @@ const Collection = () => {
           );
         }
 
-        // Filter multi subcategory di frontend (ini backend hanya support satu kategori di query???????)
-        if (subCategory.length > 1) {
-          products = products.filter((item) =>
-            subCategory
-              .map((cat) => CATEGORY_MAP[cat] || cat)
-              .includes(item.category)
-          );
-        }
-
         setFilterProducts(products);
       } catch (err) {
         setFilterProducts([]);
@@ -71,7 +62,7 @@ const Collection = () => {
     };
 
     fetchProducts();
-  }, [subCategory, search, showSearch]);
+  }, [selectedCategory, search, showSearch]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
@@ -89,7 +80,7 @@ const Collection = () => {
           />
         </p>
 
-        {/* Sub Category Filter Only */}
+        {/* Category Filter: Hanya bisa pilih satu */}
         <div
           className={`border border-gray-300 pl-5 py-3 mt-6 ${
             showFilter ? "" : "hidden"
@@ -97,18 +88,31 @@ const Collection = () => {
         >
           <p className="mb-3 text-sm font-medium">TYPE</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {["Topwear", "Bottomwear", "Footwear", "Accessories"].map((cat) => (
-              <p className="flex gap-2" key={cat}>
+            {categoryList.map((cat) => (
+              <label className="flex gap-2" key={cat}>
                 <input
                   className="w-3"
+                  type="radio"
+                  name="category"
                   value={cat}
-                  onChange={toggleSubCategory}
-                  checked={subCategory.includes(cat)}
-                  type="checkbox"
-                />{" "}
-                {cat}{" "}
-              </p>
+                  checked={selectedCategory === cat}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                />
+                {cat}
+              </label>
             ))}
+            {/* Opsi hapus filter */}
+            <label className="flex gap-2">
+              <input
+                className="w-3"
+                type="radio"
+                name="category"
+                value=""
+                checked={selectedCategory === ""}
+                onChange={() => setSelectedCategory("")}
+              />
+              All Categories
+            </label>
           </div>
         </div>
       </div>
@@ -142,9 +146,10 @@ const Collection = () => {
             ) : (
               filterProducts.map((item, index) => (
                 <ProductItem
-                  key={index}
+                  key={item.id_product || item._id}
                   id={item.id_product || item._id}
-                  image={item.image}
+                  // gambar dummy
+                  image={[dummyImages[index % dummyImages.length]]}
                   name={item.name}
                   price={item.price}
                 />
