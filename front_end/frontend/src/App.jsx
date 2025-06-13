@@ -11,6 +11,7 @@ import Navbar from "./components/Navbar";
 import MyFavorite from "./pages/MyFavorite";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import Footer from "./components/Footer";
 
 const App = () => {
   return (
@@ -29,6 +30,7 @@ const App = () => {
         <Route path="/orders" element={<Orders />} />
         <Route path="/checkout/:id" element={<Checkout />} />
       </Routes>
+      <Footer />
     </div>
   );
 };
