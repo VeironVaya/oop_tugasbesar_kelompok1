@@ -7,14 +7,14 @@ import lombok.Setter;
 
 /**
  * When a client GETs a Product, we send back:
- *  • idProduct, name, description, price, category
- *  • a list of StockResponseDto (size + stockQuantity)
+ * • idProduct, name, description, price, category
+ * • a list of StockResponseDto (size + stockQuantity)
  */
 @Getter
 @Setter
 public class ProductWithStockResponseDto {
-    private Boolean status;
-    private String message;  
+    private String status;
+    private String message;
     private Long idProduct;
     private String name;
     private String description;

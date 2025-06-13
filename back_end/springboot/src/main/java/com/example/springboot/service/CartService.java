@@ -1,26 +1,25 @@
 package com.example.springboot.service;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.springboot.dto.response.CartItemResponseDto;
 import com.example.springboot.dto.response.CartWithCartItemDto;
 import com.example.springboot.entity.Cart;
 import com.example.springboot.entity.CartItem;
 import com.example.springboot.entity.Customer;
 import com.example.springboot.entity.Stock;
+import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.repository.CartItemRepository;
 import com.example.springboot.repository.CartRepository;
 import com.example.springboot.repository.CustomerRepository;
 import com.example.springboot.repository.StockRepository;
 
 import jakarta.persistence.EntityNotFoundException;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import com.example.springboot.dto.response.CartResponseDto;
 
 @Service
 @Transactional
@@ -94,6 +93,7 @@ public class CartService {
 
     private CartWithCartItemDto mapCartToDto(Cart cart) {
         CartWithCartItemDto dto = new CartWithCartItemDto();
+
         dto.setStatus(true);
         dto.setMessage("item successfully added to cart"); // or “retrieved cart” if using getCartForCustomer
         dto.setIdCart(cart.getIdCart());
@@ -110,6 +110,7 @@ public class CartService {
     private CartItemResponseDto mapCartItemToDto(CartItem ci) {
         CartItemResponseDto ciDto = new CartItemResponseDto();
         ciDto.setIdCartItem(ci.getId_cart_item());
+        ciDto.setIdStock(ci.getStock().getIdStock());
 
         // Pull Product fields from ci.getStock().getProduct()
         String name = ci.getStock().getProduct().getName();
@@ -143,4 +144,82 @@ public class CartService {
 
         return dto;
     }
+
+    public CartWithCartItemDto patchCartItem(Long idCustomer, Long idStock, int newQuantity) {
+        // 1) fetch customer
+        Customer customer = customerRepository.findById(idCustomer)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + idCustomer));
+        // 2) fetch cart
+        Cart cart = cartRepository.findByCustomer(customer)
+                .orElseThrow(() -> new EntityNotFoundException("Cart not found for customer: " + idCustomer));
+        // 3) fetch stock
+        Stock stock = stockRepository.findById(idStock)
+                .orElseThrow(() -> new EntityNotFoundException("Stock not found: " + idStock));
+        // 4) fetch cartItem
+        CartItem cartItem = cartItemRepository
+                .findByCartAndStock(cart, stock)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "CartItem not found for customer " + idCustomer + " and stock " + idStock));
+
+        // 5) validate new quantity
+        if (newQuantity <= 0) {
+            throw new InvalidDataException("Quantity must be at least 1");
+        }
+        if (newQuantity > stock.getStock_quantity()) {
+            throw new IllegalStateException(
+                    "Requested quantity " + newQuantity + " exceeds available stock " + stock.getStock_quantity());
+        }
+
+        // 6) update & save
+        cartItem.setItem_quantity(newQuantity);
+        cartItemRepository.save(cartItem);
+
+        // 7) recalc cart total
+        recalcCartTotal(cart);
+
+        // 8) return DTO
+        return mapCartToDto(cart);
+    }
+
+    /**
+     * Remove a specific stock item from the customer's cart entirely.
+     */
+    public CartWithCartItemDto deleteCartItem(Long idCustomer, Long idStock) {
+        // 1) fetch customer
+        Customer customer = customerRepository.findById(idCustomer)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + idCustomer));
+        // 2) fetch cart
+        Cart cart = cartRepository.findByCustomer(customer)
+                .orElseThrow(() -> new EntityNotFoundException("Cart not found for customer: " + idCustomer));
+        // 3) fetch stock
+        Stock stock = stockRepository.findById(idStock)
+                .orElseThrow(() -> new EntityNotFoundException("Stock not found: " + idStock));
+        // 4) fetch cartItem
+        CartItem cartItem = cartItemRepository
+                .findByCartAndStock(cart, stock)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "CartItem not found for customer " + idCustomer + " and stock " + idStock));
+
+        // 5) remove from cart and delete
+        cart.getItems().remove(cartItem);
+        cartItemRepository.delete(cartItem);
+
+        // 6) recalc cart total
+        recalcCartTotal(cart);
+
+        // 7) return DTO
+        return mapCartToDto(cart);
+    }
+
+    /**
+     * Helper to recalculate and persist the cart's total price.
+     */
+    private void recalcCartTotal(Cart cart) {
+        double sum = cart.getItems().stream()
+                .mapToDouble(ci -> ci.getStock().getProduct().getPrice() * ci.getItem_quantity())
+                .sum();
+        cart.setTotal_price(sum);
+        cartRepository.save(cart);
+    }
+
 }

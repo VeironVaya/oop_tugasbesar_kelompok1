@@ -50,7 +50,7 @@ public class ProductController {
             @RequestBody ProductWithStockRequestDto dto) {
         try {
             ProductWithStockResponseDto saved = productService.postProductWithStockResponseDto(dto);
-            saved.setStatus(true);
+            saved.setStatus("true");
             saved.setMessage("Product created successfully");
             return ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -58,7 +58,7 @@ public class ProductController {
 
         } catch (InvalidDataException ex) {
             ProductWithStockResponseDto error = new ProductWithStockResponseDto();
-            error.setStatus(false);
+            error.setStatus("false");
             error.setMessage("Invalid product data: " + ex.getMessage());
             return ResponseEntity
                     .badRequest()
@@ -66,7 +66,7 @@ public class ProductController {
 
         } catch (Exception ex) {
             ProductWithStockResponseDto error = new ProductWithStockResponseDto();
-            error.setStatus(false);
+            error.setStatus("false");
             error.setMessage("An unexpected error occurred");
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -81,15 +81,13 @@ public class ProductController {
 
         try {
             StockResponseDto saved = stockService.postStockToProduct(productId, dto);
-            saved.setStatus(true);
-            saved.setMessage("Stock created successfully");
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(saved);
 
         } catch (InvalidDataException ex) {
             ProductWithStockResponseDto error = new ProductWithStockResponseDto();
-            error.setStatus(false);
+            error.setStatus("false");
             error.setMessage("Invalid stock data: " + ex.getMessage());
             return ResponseEntity
                     .badRequest()
@@ -130,7 +128,7 @@ public class ProductController {
                     .body(response);
         } catch (Exception ex) {
             ProductWithStockResponseDto error = new ProductWithStockResponseDto();
-            error.setStatus(false);
+            error.setStatus("false");
             error.setMessage("An unexpected error occurred");
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -146,11 +144,11 @@ public class ProductController {
             ProductWithStockResponseDto updated = productService.patchProductWithStock(id, dto);
             updated.setIdProduct(id);
             updated.setMessage("Product updated successfully");
-            updated.setStatus(true);
+            updated.setStatus("true");
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException ex) {
             ProductWithStockResponseDto response = new ProductWithStockResponseDto();
-            response.setStatus(false);
+            response.setStatus("false");
             response.setMessage("Patch failed: " + ex.getMessage());
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
@@ -171,7 +169,7 @@ public class ProductController {
             return ResponseEntity.ok(product);
         } catch (IllegalArgumentException ex) {
             ProductWithStockResponseDto response = new ProductWithStockResponseDto();
-            response.setStatus(false);
+            response.setStatus("false");
             response.setMessage("Get failed: " + ex.getMessage());
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
@@ -190,8 +188,34 @@ public class ProductController {
     public ResponseEntity<ProductWithCustomerResponseDto> getProductDetailWstatus(
             @PathVariable("id_product") Long productId,
             @PathVariable("id_customer") Long customerId) {
-        ProductWithCustomerResponseDto dto = productService.getProductDetailWstatus(productId, customerId);
-        return ResponseEntity.ok(dto);
+
+        try {
+            // 1) fetch your full DTO (without status/message yet)
+            ProductWithCustomerResponseDto dto = productService.getProductDetailWstatus(productId, customerId);
+
+            // 2) annotate it with a success status/message
+            dto.setStatus("true");
+            dto.setMessage("Product loaded successfully");
+            return ResponseEntity.ok(dto);
+
+        } catch (ResourceNotFoundException ex) {
+            // 404: either product or customer not found
+            ProductWithCustomerResponseDto err = new ProductWithCustomerResponseDto();
+            err.setStatus("false");
+            err.setMessage(ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(err);
+
+        } catch (Exception ex) {
+            // 500: anything else
+            ProductWithCustomerResponseDto err = new ProductWithCustomerResponseDto();
+            err.setStatus("false");
+            err.setMessage("Unexpected error: " + ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(err);
+        }
     }
 
     @PostMapping("/{productId}/customer/{customerId}/favorites")

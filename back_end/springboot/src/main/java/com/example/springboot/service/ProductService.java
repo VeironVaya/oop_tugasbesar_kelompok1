@@ -17,6 +17,8 @@ import com.example.springboot.entity.Product;
 import com.example.springboot.entity.Stock;
 import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.exception.ResourceNotFoundException;
+import com.example.springboot.repository.CustomerRepository;
+import com.example.springboot.repository.FavoriteProductRepository;
 import com.example.springboot.repository.ProductRepository;
 import com.example.springboot.repository.StockRepository;
 
@@ -26,11 +28,16 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
+    private final CustomerRepository customerRepository;
+    private final FavoriteProductRepository favRepository;
 
     public ProductService(ProductRepository productRepository,
-            StockRepository stockRepository) {
+            StockRepository stockRepository, CustomerRepository customerRepository,
+            FavoriteProductRepository favRepository) {
         this.productRepository = productRepository;
         this.stockRepository = stockRepository;
+        this.customerRepository = customerRepository;
+        this.favRepository = favRepository;
     }
 
     public ProductWithStockResponseDto postProductWithStockResponseDto(ProductWithStockRequestDto dto) {
@@ -39,13 +46,17 @@ public class ProductService {
             throw new InvalidDataException("Name is required");
         }
         if (dto.getPrice() < 0) {
-            throw new InvalidDataException("Price must be non-negative");
+            throw new InvalidDataException("Price must be non-negative ");
         }
         if (dto.getSize() == null || dto.getSize().trim().isEmpty()) {
             throw new InvalidDataException("Size is required");
         }
-        if (dto.getStockQuantity() < 0) {
-            throw new InvalidDataException("Stock quantity must be non-negative");
+        if (dto.getStockQuantity() <= 0) {
+            throw new InvalidDataException("Stock quantity must be non-negative and not 0");
+        }
+
+        if (dto.getCategory() == null || dto.getCategory().trim().isEmpty()) {
+            throw new InvalidDataException("Product category cannot be empty");
         }
 
         Product p = new Product();
@@ -70,6 +81,8 @@ public class ProductService {
         resp.setCategory(saved.getCategory());
 
         StockResponseDto stockDto = new StockResponseDto();
+        stockDto.setMessage("OK");
+        stockDto.setStatus("true");
         stockDto.setIdStock(savedStock.getIdStock());
         stockDto.setSize(savedStock.getSize());
         stockDto.setStockQuantity(savedStock.getStock_quantity());
@@ -112,6 +125,17 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product with ID " + id + " not found"));
 
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new InvalidDataException("Name is required");
+        }
+        if (dto.getPrice() < 0) {
+            throw new InvalidDataException("Price must be non-negative ");
+        }
+
+        if (dto.getCategory() == null || dto.getCategory().trim().isEmpty()) {
+            throw new InvalidDataException("Product category cannot be empty");
+        }
+
         List<Stock> stocks = stockRepository.findAllByProduct_IdProduct(id);
         ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
 
@@ -128,7 +152,7 @@ public class ProductService {
         List<StockResponseDto> stockDtos = stocks.stream()
                 .map(stock -> {
                     StockResponseDto sd = new StockResponseDto();
-                    sd.setStatus(true);
+                    sd.setStatus("true");
                     sd.setMessage("OK");
                     sd.setIdStock(stock.getIdStock());
                     sd.setSize(stock.getSize());
@@ -150,7 +174,7 @@ public class ProductService {
         List<Stock> stocks = stockRepository.findAllByProduct_IdProduct(id);
         ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
         resp.setIdProduct(id);
-        resp.setStatus(true);
+        resp.setStatus("true");
         resp.setMessage("product retrieve successfully");
         resp.setName(product.getName());
         resp.setDescription(product.getDescription());
@@ -161,7 +185,7 @@ public class ProductService {
                 .map(stock -> {
                     StockResponseDto dto = new StockResponseDto();
                     // if you really need per‐item status/message:
-                    dto.setStatus(true);
+                    dto.setStatus("true");
                     dto.setMessage("OK");
                     // map your actual stock properties:
                     dto.setIdStock(stock.getIdStock());
@@ -174,10 +198,51 @@ public class ProductService {
         return resp;
     }
 
-    public ProductWithCustomerResponseDto getProductDetailWstatus(Long productId, Long customerId) {
-        return productRepository.findDetailWithFavorite(productId, customerId)
+    public ProductWithCustomerResponseDto getProductDetailWstatus(
+            Long productId,
+            Long customerId) {
+        // 1) ensure customer exists (else 404)
+        if (!customerRepository.existsById(customerId)) {
+            throw new ResourceNotFoundException(
+                    "Customer with id %d not found".formatted(customerId));
+        }
+
+        // 2) load the Product (else 404)
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Product dengan id %d untuk customer %d tidak ditemukan".formatted(productId, customerId)));
+                        "Product with id %d not found".formatted(productId)));
+
+        // 3) figure out favorite‐flag
+        boolean isFav = favRepository.existsByProduct_IdProductAndCustomer_IdCustomer(
+                productId,
+                customerId);
+
+        // 4) load all stocks
+        List<Stock> allStocks = stockRepository.findAllByProduct_IdProduct(productId);
+
+        // 5) map stocks → StockResponseDto
+        List<StockResponseDto> stockDtos = allStocks.stream()
+                .map(s -> {
+                    StockResponseDto dto = new StockResponseDto();
+                    dto.setStatus("OK");
+                    dto.setMessage("Stock row loaded");
+                    dto.setIdStock(s.getIdStock());
+                    dto.setSize(s.getSize());
+                    dto.setStockQuantity(s.getStock_quantity());
+                    return dto;
+                })
+                .toList();
+
+        // 6) assemble ProductWithCustomerResponseDto
+        ProductWithCustomerResponseDto out = new ProductWithCustomerResponseDto();
+        out.setIdProduct(product.getIdProduct());
+        out.setName(product.getName());
+        out.setDescription(product.getDescription());
+        out.setPrice(product.getPrice());
+        out.setCategory(product.getCategory());
+        out.setIsFavorite(isFav);
+        out.setStocks(stockDtos);
+        return out;
     }
 
     public List<ProductResponseDto> getProductsByKeyword(String keyword) {

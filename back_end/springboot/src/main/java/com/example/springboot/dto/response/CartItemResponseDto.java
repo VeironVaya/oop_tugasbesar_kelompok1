@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class CartItemResponseDto {
     private long idCartItem;
+    private long idStock;
     private String name;
     private String description;
     private Double price;

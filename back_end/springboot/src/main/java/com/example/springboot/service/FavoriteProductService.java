@@ -13,7 +13,6 @@ import com.example.springboot.entity.FavoriteProduct;
 import com.example.springboot.repository.CustomerRepository;
 import com.example.springboot.repository.FavoriteProductRepository;
 
-
 @Service
 @Transactional
 public class FavoriteProductService {
@@ -22,8 +21,8 @@ public class FavoriteProductService {
     private final FavoriteProductRepository favoriteProductRepository;
 
     public FavoriteProductService(ProductRepository productRepository,
-                                CustomerRepository customerRepository,
-                                FavoriteProductRepository favoriteProductRepository) {
+            CustomerRepository customerRepository,
+            FavoriteProductRepository favoriteProductRepository) {
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
         this.favoriteProductRepository = favoriteProductRepository;
@@ -31,10 +30,10 @@ public class FavoriteProductService {
 
     public AddRemoveFavoriteResponseDto addFavorite(Long productId, Long customerId) {
         if (favoriteProductRepository
-            .existsByProduct_IdProductAndCustomer_IdCustomer(productId, customerId)) {
-        throw new DuplicateFavoriteException(productId, customerId);
-    }
-        
+                .existsByProduct_IdProductAndCustomer_IdCustomer(productId, customerId)) {
+            throw new DuplicateFavoriteException(productId, customerId);
+        }
+
         Product prodRef = productRepository.getReferenceById(productId);
         Customer custRef = customerRepository.getReferenceById(customerId);
 
@@ -52,11 +51,11 @@ public class FavoriteProductService {
 
     public AddRemoveFavoriteResponseDto removeFavorite(Long productId, Long customerId) {
         if (!favoriteProductRepository
-        .existsByProduct_IdProductAndCustomer_IdCustomer(productId, customerId)) {
-        throw new ResourceNotFoundException(
-        "Favorite for productId: " + productId +
-        " and customerId: " + customerId +
-        " is not available, nothing to remove");
+                .existsByProduct_IdProductAndCustomer_IdCustomer(productId, customerId)) {
+            throw new ResourceNotFoundException(
+                    "Favorite for productId: " + productId +
+                            " and customerId: " + customerId +
+                            " is not available, nothing to remove");
         }
 
         favoriteProductRepository.deleteByProduct_IdProductAndCustomer_IdCustomer(productId, customerId);

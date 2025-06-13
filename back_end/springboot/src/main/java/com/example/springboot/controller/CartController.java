@@ -1,13 +1,19 @@
 package com.example.springboot.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.springboot.dto.request.CartItemDto;
 import com.example.springboot.dto.response.CartWithCartItemDto;
 import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.service.CartService;
@@ -120,6 +126,95 @@ public class CartController {
             error.setIdCart(null);
             error.setCartTotalPrice("0.0");
             error.setItems(java.util.List.of());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(error);
+        }
+    }
+
+    // when user tap the '+' or '-' icon in cart on spesific cart item it will
+    // update the cart item quantity (stock)
+    @PatchMapping("/{idCustomer}/carts/stocks/{idStock}")
+    public ResponseEntity<CartWithCartItemDto> patchCartItem(
+            @PathVariable Long idCustomer,
+            @PathVariable Long idStock,
+            @RequestBody CartItemDto updateDto // carry the new quantity
+    ) {
+        try {
+            CartWithCartItemDto dto = cartService.patchCartItem(
+                    idCustomer,
+                    idStock,
+                    updateDto.getItemQuantity());
+            dto.setStatus(true);
+            dto.setMessage("Cart item updated successfully");
+            return ResponseEntity.ok(dto);
+
+        } catch (EntityNotFoundException ex) {
+            CartWithCartItemDto error = new CartWithCartItemDto();
+            error.setStatus(false);
+            error.setMessage("Not found: " + ex.getMessage());
+            error.setIdCart(null);
+            error.setCartTotalPrice("0.0");
+            error.setItems(List.of());
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(error);
+
+        } catch (InvalidDataException | IllegalStateException ex) {
+            CartWithCartItemDto error = new CartWithCartItemDto();
+            error.setStatus(false);
+            error.setMessage("Cannot update item: " + ex.getMessage());
+            error.setIdCart(null);
+            error.setCartTotalPrice("0.0");
+            error.setItems(List.of());
+            return ResponseEntity
+                    .badRequest()
+                    .body(error);
+
+        } catch (Exception ex) {
+            CartWithCartItemDto error = new CartWithCartItemDto();
+            error.setStatus(false);
+            error.setMessage("Unexpected error: " + ex.getMessage());
+            error.setIdCart(null);
+            error.setCartTotalPrice("0.0");
+            error.setItems(List.of());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(error);
+        }
+    }
+
+    // when the item quantity (stock) is 0 the item cart will be deleted
+    @DeleteMapping("/{idCustomer}/carts/stocks/{idStock}")
+    public ResponseEntity<CartWithCartItemDto> deleteCartItem(
+            @PathVariable Long idCustomer,
+            @PathVariable Long idStock) {
+        try {
+            CartWithCartItemDto dto = cartService.deleteCartItem(
+                    idCustomer,
+                    idStock);
+            dto.setStatus(true);
+            dto.setMessage("Cart item removed successfully");
+            return ResponseEntity.ok(dto);
+
+        } catch (EntityNotFoundException ex) {
+            CartWithCartItemDto error = new CartWithCartItemDto();
+            error.setStatus(false);
+            error.setMessage("Not found: " + ex.getMessage());
+            error.setIdCart(null);
+            error.setCartTotalPrice("0.0");
+            error.setItems(List.of());
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(error);
+
+        } catch (Exception ex) {
+            CartWithCartItemDto error = new CartWithCartItemDto();
+            error.setStatus(false);
+            error.setMessage("Unexpected error: " + ex.getMessage());
+            error.setIdCart(null);
+            error.setCartTotalPrice("0.0");
+            error.setItems(List.of());
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(error);
