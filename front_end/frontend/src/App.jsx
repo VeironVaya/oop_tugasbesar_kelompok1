@@ -12,6 +12,7 @@ import Orders from "./pages/Orders";
 import Navbar from "./components/Navbar";
 import MyFavorite from "./pages/MyFavorite";
 import Checkout from "./pages/Checkout";
+import Regist from "./pages/Regist";
 
 const App = () => {
   return (
@@ -29,6 +30,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/place-order" element={<PlaceOrder />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/regist" element={<Regist />} />
       </Routes>
     </div>
   );
