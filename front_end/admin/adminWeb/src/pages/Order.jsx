@@ -14,7 +14,7 @@ const Order = () => {
         const res = await axios.get(
           "http://localhost:8080/api/v1/transactions"
         );
-        setOrders(res.data);
+        setOrders(res.data); // res.data = array of transaction
       } catch (error) {
         console.error("Gagal mengambil transaksi:", error);
         alert("Gagal mengambil data transaksi.");
@@ -28,7 +28,7 @@ const Order = () => {
 
   // Filter berdasarkan ID transaksi saja
   const filteredOrders = orders.filter((order) => {
-    const id = order.idTransaction?.toLowerCase() || "";
+    const id = String(order.idTransaction || "").toLowerCase();
     const search = searchTerm.toLowerCase();
     return id.includes(search);
   });
@@ -60,7 +60,7 @@ const Order = () => {
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Cari ID transaksi (contoh: transaction-001)"
+          placeholder="Cari ID transaksi (contoh: 1)"
           className="border px-4 py-2 rounded w-full md:w-1/2"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -74,42 +74,49 @@ const Order = () => {
           Tidak ada transaksi dengan ID tersebut.
         </p>
       ) : (
-        filteredOrders.map((order, index) => (
-          <Link
-            to={`/order/${order.idTransaction}`}
-            key={index}
-            className="block border rounded-lg p-4 mb-4 hover:bg-gray-100 transition"
-          >
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="text-4xl">📦</div>
-                <div>
-                  <p className="font-semibold underline">
-                    Id: {order.idTransaction}
-                  </p>
-                  <p>Name: {order.name}</p>
-                  <p>Description: {order.description}</p>
-                  <p>Category: {order.category}</p>
-                  <p>Total: {order.totalPrice}</p>
-                  <p>Date: {order.date}</p>
-                </div>
-              </div>
+        filteredOrders.map((order, index) => {
+          const item = order.transactionItems?.[0];
+          const stock = item?.stock;
 
-              <select
-                value={order.paymentStatus}
-                onClick={(e) => e.preventDefault()}
-                onChange={(e) => {
-                  e.preventDefault();
-                  handleStatusChange(order.idTransaction, e.target.value);
-                }}
-                className="border rounded px-3 py-1 bg-white cursor-pointer"
-              >
-                <option value="Unpaid">Unpaid</option>
-                <option value="Paid">Paid</option>
-              </select>
-            </div>
-          </Link>
-        ))
+          return (
+            <Link
+              to={`/order/${order.idTransaction}`}
+              key={index}
+              className="block border rounded-lg p-4 mb-4 hover:bg-gray-100 transition"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="text-4xl">📦</div>
+                  <div>
+                    <p className="font-semibold underline">
+                      Id: {order.idTransaction}
+                    </p>
+                    <p>Customer ID: {order.idCustomer}</p>
+                    <p>Total: Rp {order.totalPrice}</p>
+                    <p>Status: {order.paymentStatus}</p>
+                    <p>Date: {order.date}</p>
+                    <p>Size: {stock?.size || "N/A"}</p>
+                    <p>Qty: {item?.quantity || "N/A"}</p>
+                    <p>Stock Qty: {stock?.stockQuantity || "N/A"}</p>
+                  </div>
+                </div>
+
+                <select
+                  value={order.paymentStatus}
+                  onClick={(e) => e.preventDefault()}
+                  onChange={(e) => {
+                    e.preventDefault();
+                    handleStatusChange(order.idTransaction, e.target.value);
+                  }}
+                  className="border rounded px-3 py-1 bg-white cursor-pointer"
+                >
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Paid">Paid</option>
+                </select>
+              </div>
+            </Link>
+          );
+        })
       )}
     </div>
   );

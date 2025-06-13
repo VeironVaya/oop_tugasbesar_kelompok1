@@ -146,7 +146,7 @@ const EditDetails = () => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-900">Current Stock</h3>
             <Link 
-              to={`/editdetails/${productId}/addstock`} 
+              to={`/edit/${productId}/addstock`} 
               className="text-blue-600 hover:text-blue-800 hover:underline font-semibold"
             >
               Add Stock
