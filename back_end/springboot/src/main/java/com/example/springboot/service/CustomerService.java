@@ -4,6 +4,7 @@ import com.example.springboot.dto.request.CustomerDto;
 import com.example.springboot.dto.response.CustomerResponseDto;
 import com.example.springboot.entity.Customer;
 import com.example.springboot.exception.InvalidDataException;
+import com.example.springboot.repository.AdminRepository;
 import com.example.springboot.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,13 +15,17 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class CustomerService {
     private final CustomerRepository repo;
+    private final AdminRepository adminRepo;
     private final PasswordEncoder encoder;
 
     public CustomerResponseDto register(CustomerDto dto) {
         if (repo.findByUsername(dto.getUsername()).isPresent()) {
             throw new InvalidDataException("Username " + dto.getUsername() + " already exist");
         }
-        ;
+        
+        if (adminRepo.findByUsername(dto.getUsername()).isPresent()) {
+            throw new InvalidDataException("Username " + dto.getUsername() + " already exist");
+        }
 
         String hashed = encoder.encode(dto.getPassword());
 
