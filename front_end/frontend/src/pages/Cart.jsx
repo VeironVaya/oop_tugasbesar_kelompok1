@@ -29,7 +29,6 @@ const Cart = () => {
         const res = await axios.get(
           `http://localhost:8080/api/v1/customers/${id_customer}/carts`
         );
-        // Response backend: pastikan struktur { data: [ { product, size, quantity, ... } ] }
         setCartData(res.data.data || []);
       } catch (err) {
         alert("Gagal mengambil data cart dari server");
@@ -56,9 +55,6 @@ const Cart = () => {
             <p className="text-gray-500">Cart kosong.</p>
           ) : (
             cartData.map((item, index) => {
-              // Cocokkan ID produk
-              // Jika backend sudah memberikan detail produk, gunakan langsung
-              // Jika tidak, mapping ke products context
               const productData =
                 item.product ||
                 products.find(
