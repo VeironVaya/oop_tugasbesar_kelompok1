@@ -122,7 +122,7 @@ public class TransactionService {
                     d.setTotalPrice(temp.getTotalPrice());
 
                     StockResponseDto sd = new StockResponseDto();
-                    sd.setStatus(true);
+                    sd.setStatus("true");
                     sd.setMessage("OK");
                     sd.setIdStock(temp.getStock().getIdStock());
                     sd.setSize(temp.getStock().getSize());
@@ -156,7 +156,7 @@ public class TransactionService {
             d.setTotalPrice(temp.getTotalPrice());
 
             StockResponseDto sd = new StockResponseDto();
-            sd.setStatus(true);
+            sd.setStatus("true");
             sd.setMessage("OK");
             sd.setIdStock(temp.getStock().getIdStock());
             sd.setSize(temp.getStock().getSize());
