@@ -34,7 +34,7 @@ function App() {
             <Route path="/listitems" element={<Listitems />} />
             <Route path="/editdetails/:productId" element={<Editdetails />} />
             <Route path="/order/:id" element={<OrderDetail />} />
-            <Route path="/edit/:productId/addstock" element={<AddStock />} />
+            <Route path="/editdetails/:productId/addstock" element={<AddStock />} />
             <Route path="/additems" element={<Add />} />
             <Route path="/orders" element={<Order />} />
           </Routes>
