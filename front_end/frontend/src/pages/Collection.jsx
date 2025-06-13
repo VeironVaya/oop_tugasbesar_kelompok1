@@ -1,16 +1,25 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
-import { ShopContext } from "../context/ShopContext";
 import { assets } from "../assets/assets";
+import axios from "axios";
+
+const CATEGORY_MAP = {
+  Topwear: "TopWare",
+  Bottomwear: "BottomWare",
+  Footwear: "Footwear",
+  Accessories: "accessories",
+};
 
 const Collection = () => {
-  const { products, search, showSearch } = useContext(ShopContext);
-
   const [filterProducts, setFilterProducts] = useState([]);
   const [subCategory, setSubCategory] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Toggle Subcategory Filter
   const toggleSubCategory = (e) => {
     if (subCategory.includes(e.target.value)) {
       setSubCategory((prev) => prev.filter((a) => a !== e.target.value));
@@ -19,26 +28,49 @@ const Collection = () => {
     }
   };
 
-  const applyFilter = () => {
-    let productsCopy = products.slice();
-
-    if (showSearch && search) {
-      productsCopy = productsCopy.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    if (subCategory.length > 0) {
-      productsCopy = productsCopy.filter((item) =>
-        subCategory.includes(item.subCategory)
-      );
-    }
-
-    setFilterProducts(productsCopy);
-  };
-
+  // Fetch API sesuai filter
   useEffect(() => {
-    applyFilter();
+    const fetchProducts = async () => {
+      setLoading(true);
+
+      try {
+        let apiUrl = "http://localhost:8080/api/v1/products";
+        // Jika ada filter kategori, kirim ?category=xxx (atau jika >1, bisa pakai array) 9NTAR SESUAIIN LAGI SETELAH QA PROCESS)
+        if (subCategory.length === 1) {
+          apiUrl += `?category=${encodeURIComponent(
+            CATEGORY_MAP[subCategory[0]] || subCategory[0]
+          )}`;
+        }
+
+        const res = await axios.get(apiUrl);
+        let products = res.data.data || [];
+
+        // Filter pencarian (search)
+        if (showSearch && search) {
+          products = products.filter((item) =>
+            item.name.toLowerCase().includes(search.toLowerCase())
+          );
+        }
+
+        // Filter multi subcategory di frontend (ini backend hanya support satu kategori di query???????)
+        if (subCategory.length > 1) {
+          products = products.filter((item) =>
+            subCategory
+              .map((cat) => CATEGORY_MAP[cat] || cat)
+              .includes(item.category)
+          );
+        }
+
+        setFilterProducts(products);
+      } catch (err) {
+        setFilterProducts([]);
+        alert("Gagal mengambil data produk dari server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, [subCategory, search, showSearch]);
 
   return (
@@ -65,42 +97,18 @@ const Collection = () => {
         >
           <p className="mb-3 text-sm font-medium">TYPE</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            <p className="flex gap-2">
-              <input
-                className="w-3"
-                value={"Topwear"}
-                onChange={toggleSubCategory}
-                type="checkbox"
-              />{" "}
-              Topwear{" "}
-            </p>
-            <p className="flex gap-2">
-              <input
-                className="w-3"
-                value={"Bottomwear"}
-                onChange={toggleSubCategory}
-                type="checkbox"
-              />{" "}
-              Bottomwear{" "}
-            </p>
-            <p className="flex gap-2">
-              <input
-                className="w-3"
-                value={"Footwear"}
-                onChange={toggleSubCategory}
-                type="checkbox"
-              />{" "}
-              Footwear{" "}
-            </p>
-            <p className="flex gap-2">
-              <input
-                className="w-3"
-                value={"Accessories"}
-                onChange={toggleSubCategory}
-                type="checkbox"
-              />{" "}
-              Accessories{" "}
-            </p>
+            {["Topwear", "Bottomwear", "Footwear", "Accessories"].map((cat) => (
+              <p className="flex gap-2" key={cat}>
+                <input
+                  className="w-3"
+                  value={cat}
+                  onChange={toggleSubCategory}
+                  checked={subCategory.includes(cat)}
+                  type="checkbox"
+                />{" "}
+                {cat}{" "}
+              </p>
+            ))}
           </div>
         </div>
       </div>
@@ -111,18 +119,39 @@ const Collection = () => {
           <Title text1={"ALL"} text2={"COLLECTIONS"} />
         </div>
 
-        {/* Map Products */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
-          {filterProducts.map((item, index) => (
-            <ProductItem
-              key={index}
-              id={item._id}
-              image={item.image}
-              name={item.name}
-              price={item.price}
-            />
-          ))}
+        {/* Pencarian */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="border px-3 py-2 rounded w-full max-w-xs"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setShowSearch(true);
+            }}
+          />
         </div>
+
+        {loading ? (
+          <p>Loading products...</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
+            {filterProducts.length === 0 ? (
+              <p className="text-gray-500 col-span-full">Produk tidak ditemukan.</p>
+            ) : (
+              filterProducts.map((item, index) => (
+                <ProductItem
+                  key={index}
+                  id={item.id_product || item._id}
+                  image={item.image}
+                  name={item.name}
+                  price={item.price}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
