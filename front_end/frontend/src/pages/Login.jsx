@@ -1,6 +1,8 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
+import axios from "axios";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -8,20 +10,55 @@ const Login = () => {
   const { setUser, setUserRole } = useContext(ShopContext);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (username === "admin" && password === "admin123") {
-      setUser({ username });
-      setUserRole("admin");
-      localStorage.setItem("role", "admin");
-      navigate("/admin/add-items");
-    } else if (username === "user" && password === "user123") {
-      setUser({ username });
-      setUserRole("user");
-      localStorage.setItem("role", "user");
-      navigate("/");
-    } else {
-      alert("Username atau password salah");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/auth/login/login-customer",
+        {
+          username: username,
+          password: password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const result = response.data;
+
+      if (result.status) {
+        // Simpan token di localStorage
+        localStorage.setItem("token", result.data.token);
+        localStorage.setItem("tokenType", result.data.tokenType);
+        localStorage.setItem("tokenExpiry", result.data.expiredAt);
+
+        // Set user dan role di context
+        setUser({ username });
+
+        // Sementara role ditentukan dari username
+        const role = username === "admin" ? "admin" : "user";
+        setUserRole(role);
+        localStorage.setItem("role", role);
+
+        // Redirect sesuai role
+        if (role === "admin") {
+          navigate("/admin/add-items");
+        } else {
+          navigate("/");
+        }
+      } else {
+        alert(result.message || "Username atau password salah");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      if (error.response) {
+        alert(error.response.data.message || "Login gagal (response error)");
+      } else {
+        alert("Terjadi kesalahan saat menghubungi server.");
+      }
     }
   };
 
@@ -68,9 +105,9 @@ const Login = () => {
           <a href="#" className="hover:underline">
             Forget Your Password?
           </a>
-          <a href="#" className="hover:underline">
+          <Link to="/regist" className="hover:underline">
             Create Account
-          </a>
+          </Link>
         </div>
 
         {/* Button: Login */}

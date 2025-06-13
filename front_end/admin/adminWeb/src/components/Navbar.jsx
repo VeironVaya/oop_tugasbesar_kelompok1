@@ -1,12 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { assets } from "../assets/assets"; // adjust path if needed
+import { assets } from "../assets/assets"; 
 
 const Navbar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Clear auth data here if needed
+    localStorage.removeItem("isAdminLoggedIn");
+    localStorage.removeItem("authToken"); 
     navigate("/login");
   };
 
