@@ -40,7 +40,9 @@ const OrderDetail = () => {
         ← Kembali ke daftar pesanan
       </button>
 
-      <h2 className="font-semibold mb-2">ID: {order.idTransaction}</h2>
+      <h2 className="font-semibold mb-2">
+        ID Transaksi: {order.idTransaction}
+      </h2>
       <p className="mb-2">
         Status:
         <select
@@ -56,26 +58,35 @@ const OrderDetail = () => {
       <p className="mb-4">Tanggal Pesanan: {order.date}</p>
 
       {order.transactionItems && order.transactionItems.length > 0 ? (
-        order.transactionItems.map((item, idx) => (
-          <div key={idx} className="flex items-center border p-4 rounded mb-2">
-            <img
-              src={item.image || "https://via.placeholder.com/80"}
-              alt={item.name}
-              className="w-20 h-20 object-cover rounded mr-4"
-            />
-            <div className="flex-1">
-              <p>{item.name}</p>
-              <p>{item.gender}</p>
+        order.transactionItems.map((item, idx) => {
+          const stock = item.stock || {};
+          return (
+            <div
+              key={idx}
+              className="flex items-center border p-4 rounded mb-2"
+            >
+              <img
+                src={"https://via.placeholder.com/80"}
+                alt="Produk"
+                className="w-20 h-20 object-cover rounded mr-4"
+              />
+              <div className="flex-1">
+                <p className="font-semibold">Size: {stock.size || "N/A"}</p>
+                <p>Qty: {item.quantity}</p>
+                <p>Stock Tersisa: {stock.stockQuantity ?? "N/A"}</p>
+              </div>
+              <p className="font-medium text-sm text-right">
+                Subtotal: Rp.{item.totalPrice?.toLocaleString("id-ID")}
+              </p>
             </div>
-            <p>Rp.{item.price.toLocaleString("id-ID")}</p>
-          </div>
-        ))
+          );
+        })
       ) : (
         <p className="text-gray-500">Tidak ada item dalam transaksi ini.</p>
       )}
 
-      <p className="mt-4 font-semibold">
-        Total: Rp.{order.totalPrice?.toLocaleString("id-ID")}
+      <p className="mt-4 font-semibold text-lg">
+        Total Pembayaran: Rp.{order.totalPrice?.toLocaleString("id-ID")}
       </p>
     </div>
   );
