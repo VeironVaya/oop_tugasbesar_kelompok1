@@ -11,37 +11,95 @@ import Editdetails from "./pages/editdetails";
 import AddStock from "./pages/addstock";
 import { Route, Routes, useLocation } from "react-router-dom";
 import OrderDetail from "./pages/OrderDetail";
-
+import PrivateRoute from "./components/PrivateRoute";
+import { Navigate } from "react-router-dom";
 function App() {
-  const [count, setCount] = useState(0);
   const location = useLocation();
-
-  // Cek apakah di halaman login
-  const isLoginPage = location.pathname === "/login";
-
-  return (
-    <>
-      {/* Jangan tampilkan navbar & sidebar di halaman login */}
-      {!isLoginPage && <Navbar />}
-
-      <div className="flex">
-        {!isLoginPage && <Sidebar />}
-
-        {/* Main content area */}
-        <div className={`flex-1 ${!isLoginPage ? "ml-0" : ""}`}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/listitems" element={<Listitems />} />
-            <Route path="/editdetails/:productId" element={<Editdetails />} />
-            <Route path="/order/:id" element={<OrderDetail />} />
-            <Route path="/edit/:productId/addstock" element={<AddStock />} />
-            <Route path="/additems" element={<Add />} />
-            <Route path="/orders" element={<Order />} />
-          </Routes>
+    const isLoginPage = location.pathname === "/login";
+  
+    return (
+      <>
+        {!isLoginPage && <Navbar />}
+        <div className="flex">
+          {!isLoginPage && <Sidebar />}
+          <div className={`flex-1 ${!isLoginPage ? "ml-0" : ""}`}>
+            <Routes>
+              {/* ✅ LOGIN route: redirect ke dashboard jika sudah login */}
+              <Route
+                path="/login"
+                element={
+                  localStorage.getItem("isAdminLoggedIn") === "true" ? (
+                    <Navigate to="/listitems" />
+                  ) : (
+                    <Login />
+                  )
+                }
+              />
+  
+              {/* ✅ Route utama */}
+              <Route
+                path="/"
+                element={
+                  <PrivateRoute>
+                    <Navigate to="/listitems" />
+                  </PrivateRoute>
+                }
+              />
+  
+              {/* ✅ Route Admin lainnya */}
+              <Route
+                path="/listitems"
+                element={
+                  <PrivateRoute>
+                    <Listitems />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/additems"
+                element={
+                  <PrivateRoute>
+                    <Add />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <PrivateRoute>
+                    <Order />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/editdetails/:productId"
+                element={
+                  <PrivateRoute>
+                    <Editdetails />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/order/:id"
+                element={
+                  <PrivateRoute>
+                    <OrderDetail />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/edit/:productId/addstock"
+                element={
+                  <PrivateRoute>
+                    <AddStock />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </div>
         </div>
-      </div>
-    </>
-  );
-}
-
-export default App;
+      </>
+    );
+  }
+  
+  export default App;
