@@ -1,16 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
-import { assets } from "../assets/assets";
-import axios from "axios";
-
-// Daftar dummy image (isi sesuai assets kamu)
-const dummyImages = [
-  assets.dummy1,
-  assets.dummy2,
-  assets.dummy3,
-  assets.dummy4,
-];
+import { useShop } from "../context/ShopContext";
 
 const CATEGORY_MAP = {
   Topwear: "TopWare",
@@ -22,47 +13,31 @@ const CATEGORY_MAP = {
 const categoryList = ["Topwear", "Bottomwear", "Footwear", "Accessories"];
 
 const Collection = () => {
-  const [filterProducts, setFilterProducts] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(""); // hanya satu
+  const { products, loading, error } = useShop();
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [search, setSearch] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch API sesuai filter
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
+  // FILTER PRODUK
+  let filterProducts = products;
+  if (selectedCategory) {
+    filterProducts = filterProducts.filter(
+      (item) =>
+        item.category &&
+        item.category.toLowerCase() ===
+          (CATEGORY_MAP[selectedCategory] || selectedCategory).toLowerCase()
+    );
+  }
+  if (search) {
+    filterProducts = filterProducts.filter((item) =>
+      item.name?.toLowerCase().includes(search.toLowerCase())
+    );
+  }
 
-      try {
-        let apiUrl = "http://localhost:8080/api/v1/products";
-        if (selectedCategory) {
-          apiUrl += `?category=${encodeURIComponent(
-            CATEGORY_MAP[selectedCategory] || selectedCategory
-          )}`;
-        }
-
-        const res = await axios.get(apiUrl);
-        let products = res.data.data || [];
-
-        // Filter pencarian (search)
-        if (showSearch && search) {
-          products = products.filter((item) =>
-            item.name.toLowerCase().includes(search.toLowerCase())
-          );
-        }
-
-        setFilterProducts(products);
-      } catch (err) {
-        setFilterProducts([]);
-        alert("Gagal mengambil data produk dari server.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [selectedCategory, search, showSearch]);
+  // Checkbox seperti radio: hanya satu bisa aktif
+  const handleCheckbox = (cat) => {
+    setSelectedCategory(selectedCategory === cat ? "" : cat);
+  };
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
@@ -75,12 +50,12 @@ const Collection = () => {
           FILTERS
           <img
             className={`h-3 sm:hidden ${showFilter ? " rotate-90" : ""}`}
-            src={assets.dropdown_icon}
+            src="/dropdown_icon.png" // Ganti dengan path asset dropdown-icon kamu
             alt=""
           />
         </p>
 
-        {/* Category Filter: Hanya bisa pilih satu */}
+        {/* Category Filter */}
         <div
           className={`border border-gray-300 pl-5 py-3 mt-6 ${
             showFilter ? "" : "hidden"
@@ -89,30 +64,29 @@ const Collection = () => {
           <p className="mb-3 text-sm font-medium">TYPE</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
             {categoryList.map((cat) => (
-              <label className="flex gap-2" key={cat}>
+              <label
+                className="flex items-center gap-2 cursor-pointer"
+                key={cat}
+              >
                 <input
-                  className="w-3"
-                  type="radio"
-                  name="category"
-                  value={cat}
+                  className="w-4 h-4"
+                  type="checkbox"
                   checked={selectedCategory === cat}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={() => handleCheckbox(cat)}
+                  style={{
+                    accentColor: selectedCategory === cat ? "#1a1a1a" : "#bdbdbd",
+                  }}
                 />
-                {cat}
+                <span
+                  style={{
+                    color: selectedCategory === cat ? "#1a1a1a" : "#bdbdbd",
+                    fontWeight: selectedCategory === cat ? "bold" : "normal",
+                  }}
+                >
+                  {cat}
+                </span>
               </label>
             ))}
-            {/* Opsi hapus filter */}
-            <label className="flex gap-2">
-              <input
-                className="w-3"
-                type="radio"
-                name="category"
-                value=""
-                checked={selectedCategory === ""}
-                onChange={() => setSelectedCategory("")}
-              />
-              All Categories
-            </label>
           </div>
         </div>
       </div>
@@ -130,26 +104,32 @@ const Collection = () => {
             placeholder="Search products..."
             className="border px-3 py-2 rounded w-full max-w-xs"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setShowSearch(true);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
         {loading ? (
           <p>Loading products...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
             {filterProducts.length === 0 ? (
-              <p className="text-gray-500 col-span-full">Produk tidak ditemukan.</p>
+              <p className="text-gray-500 col-span-full">
+                Produk tidak ditemukan.
+              </p>
             ) : (
-              filterProducts.map((item, index) => (
+              filterProducts.map((item) => (
                 <ProductItem
                   key={item.id_product || item._id}
                   id={item.id_product || item._id}
-                  // gambar dummy
-                  image={[dummyImages[index % dummyImages.length]]}
+                  image={
+                    item.image && item.image.length > 0
+                      ? Array.isArray(item.image)
+                        ? item.image
+                        : [item.image]
+                      : ["/default.jpg"] // fallback default image jika benar-benar kosong
+                  }
                   name={item.name}
                   price={item.price}
                 />

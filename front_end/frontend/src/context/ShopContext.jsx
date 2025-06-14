@@ -1,135 +1,213 @@
-import { createContext, useState, useEffect } from "react";
-import { products } from "../assets/assets";
-import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
+
+const DEFAULT_CURRENCY = "Rp";
 
 export const ShopContext = createContext();
 
-const ShopContextProvider = (props) => {
-  const currency = "$";
-  const navigate = useNavigate();
-
-  const [cartItems, setCartItems] = useState({});
-  const [favoriteItems, setFavoriteItems] = useState([]);
+export const ShopProvider = ({ children }) => {
+  // Produk
+  const [products, setProducts] = useState([]);
+  // User
   const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(localStorage.getItem("role") || "");
+  const [userRole, setUserRole] = useState(null);
+  // Cart
+  const [cartItems, setCartItems] = useState([]);
+  // Favorite
+  const [favoriteItems, setFavoriteItems] = useState([]);
+  // Search UI
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [checkoutData, setCheckoutData] = useState(null); // ✅ Untuk checkout
+  // Checkout
+  const [checkoutData, setCheckoutData] = useState([]);
+  // Lainnya
+  const [currency] = useState(DEFAULT_CURRENCY);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // ========== FETCH PRODUCTS ==========
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get("http://localhost:8080/api/v1/products");
+      setProducts(res.data.data || []);
+    } catch (err) {
+      setError("Gagal ambil data produk!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem("role", userRole);
-  }, [userRole]);
+    fetchProducts();
+  }, []);
 
-  // ====================
-  // Cart & Favorites
-  // ====================
-  const addToFavorites = (item) => {
-    setFavoriteItems((prev) => {
-      const exists = prev.some((fav) => fav._id === item._id);
-      if (exists) return prev;
-      return [...prev, item];
-    });
-  };
-
-  const removeFromFavorites = (id) => {
-    setFavoriteItems((prev) => prev.filter((item) => item._id !== id));
-  };
-
-  const addToCart = async (itemId, size) => {
-    if (!size) {
-      toast.error("Select product size");
+  // ========== FETCH CART ==========
+  const fetchCartItems = async () => {
+    const id_customer = localStorage.getItem("id_customer");
+    if (!id_customer) {
+      setCartItems([]);
       return;
     }
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/v1/customers/${id_customer}/carts`
+      );
+      setCartItems(res.data.data || []);
+    } catch (err) {
+      setCartItems([]);
+    }
+  };
 
-    let cartData = structuredClone(cartItems);
+  // ========== FETCH FAVORITES ==========
+  const fetchFavorites = async () => {
+    const id_customer = localStorage.getItem("id_customer");
+    if (!id_customer) {
+      setFavoriteItems([]);
+      return;
+    }
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/v1/customers/${id_customer}/favorites`
+      );
+      setFavoriteItems(res.data.data || []);
+    } catch (err) {
+      setFavoriteItems([]);
+    }
+  };
 
-    if (cartData[itemId]) {
-      if (cartData[itemId][size]) {
-        cartData[itemId][size] += 1;
-      } else {
-        cartData[itemId][size] = 1;
-      }
+  // ========== EFFECT SYNC USER (cart & favorite) ==========
+  useEffect(() => {
+    if (user) {
+      fetchCartItems();
+      fetchFavorites();
     } else {
-      cartData[itemId] = {};
-      cartData[itemId][size] = 1;
+      setCartItems([]);
+      setFavoriteItems([]);
     }
+  }, [user]);
 
-    setCartItems(cartData);
-  };
+  // ========== CART ACTION ==========
+  // Total harga cart
+  const getCartAmount = () =>
+    cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  const updateQuantity = async (itemId, size, quantity) => {
-    let cartData = structuredClone(cartItems);
-    if (quantity <= 0) {
-      delete cartData[itemId][size];
-      if (Object.keys(cartData[itemId]).length === 0) {
-        delete cartData[itemId];
-      }
+  // Tambah ke cart (FE only, bisa kamu tambah POST ke backend jika ingin)
+  const addToCart = (id_product, size) => {
+    const product = products.find(
+      (p) => String(p.id_product) === String(id_product)
+    );
+    if (!product) return;
+
+    const exist = cartItems.find(
+      (item) =>
+        String(item.id_product) === String(id_product) && item.size === size
+    );
+    if (exist) {
+      setCartItems((items) =>
+        items.map((item) =>
+          String(item.id_product) === String(id_product) && item.size === size
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
     } else {
-      cartData[itemId][size] = quantity;
+      setCartItems((items) => [
+        ...items,
+        { ...product, id_product, size, quantity: 1 },
+      ]);
     }
-    setCartItems(cartData);
+    // Optional: sync ke backend di sini
   };
 
-  // ====================
-  // Cart Summary
-  // ====================
-  const getCartCount = () => {
-    let totalCount = 0;
-    for (const items in cartItems) {
-      for (const item in cartItems[items]) {
-        if (cartItems[items][item] > 0) {
-          totalCount += cartItems[items][item];
-        }
-      }
+  const updateQuantity = (id_product, size, qty) => {
+    if (qty <= 0) {
+      setCartItems((items) =>
+        items.filter(
+          (item) =>
+            !(
+              String(item.id_product) === String(id_product) &&
+              item.size === size
+            )
+        )
+      );
+    } else {
+      setCartItems((items) =>
+        items.map((item) =>
+          String(item.id_product) === String(id_product) && item.size === size
+            ? { ...item, quantity: qty }
+            : item
+        )
+      );
     }
-    return totalCount;
+    // Optional: update ke backend
   };
 
-  const getCartAmount = () => {
-    let totalAmount = 0;
-    for (const items in cartItems) {
-      let itemInfo = products.find((product) => product._id === items);
-      for (const item in cartItems[items]) {
-        if (cartItems[items][item] > 0) {
-          totalAmount += itemInfo.price * cartItems[items][item];
-        }
-      }
+  // ========== FAVORITE ACTION ==========
+  const addToFavorites = async (product) => {
+    const id_customer = localStorage.getItem("id_customer");
+    try {
+      await axios.post(
+        `http://localhost:8080/api/v1/products/${product.id_product}/customer/${id_customer}/favorites`
+      );
+      fetchFavorites();
+    } catch (err) {
+      alert("Gagal tambah ke favorite");
     }
-    return totalAmount;
   };
 
-  // ====================
-  // Context Value
-  // ====================
-  const value = {
-    currency,
-    products,
-    cartItems,
-    setCartItems,
-    user,
-    setUser,
-    userRole,
-    setUserRole,
-    favoriteItems,
-    addToFavorites,
-    removeFromFavorites,
-    addToCart,
-    updateQuantity,
-    getCartCount,
-    getCartAmount,
-    navigate,
-    search,
-    setSearch,
-    showSearch,
-    setShowSearch,
-    checkoutData, // ✅ akses checkout
-    setCheckoutData, // ✅ setter checkout
+  const removeFromFavorites = async (id_product) => {
+    const id_customer = localStorage.getItem("id_customer");
+    try {
+      await axios.delete(
+        `http://localhost:8080/api/v1/products/${id_product}/customer/${id_customer}/favorites`
+      );
+      fetchFavorites();
+    } catch (err) {
+      alert("Gagal hapus favorite");
+    }
   };
 
   return (
-    <ShopContext.Provider value={value}>{props.children}</ShopContext.Provider>
+    <ShopContext.Provider
+      value={{
+        products,
+        loading,
+        error,
+        fetchProducts,
+
+        user,
+        setUser,
+        userRole,
+        setUserRole,
+
+        cartItems,
+        setCartItems,
+        fetchCartItems,
+        getCartAmount,
+        addToCart,
+        updateQuantity,
+
+        favoriteItems,
+        fetchFavorites,
+        addToFavorites,
+        removeFromFavorites,
+
+        currency,
+        search,
+        setSearch,
+        showSearch,
+        setShowSearch,
+
+        checkoutData,
+        setCheckoutData,
+      }}
+    >
+      {children}
+    </ShopContext.Provider>
   );
 };
 
-export default ShopContextProvider;
+export const useShop = () => useContext(ShopContext);
+export default ShopProvider;
