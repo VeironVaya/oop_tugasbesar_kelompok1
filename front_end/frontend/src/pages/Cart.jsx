@@ -1,45 +1,21 @@
-import React, { useContext, useEffect, useState } from "react";
+import React from "react";
 import Title from "../components/Title";
-import { ShopContext } from "../context/ShopContext";
+import { useShop } from "../context/ShopContext";
 import { assets } from "../assets/assets";
 import CartTotal from "../components/CartTotal";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const {
     products,
     currency,
-    navigate,
+    cartItems,
     updateQuantity,
-    setCheckoutData, // tambahkan ini
-  } = useContext(ShopContext);
+    setCheckoutData,
+    loading, // loading dari context
+  } = useShop();
 
-  const [cartData, setCartData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Ambil id_customer dari localStorage (sudah disimpan waktu login)
-  const id_customer = localStorage.getItem("id_customer");
-
-  useEffect(() => {
-    const fetchCartFromBackend = async () => {
-      if (!id_customer) return;
-      setLoading(true);
-      try {
-        // Fetch dari API backend
-        const res = await axios.get(
-          `http://localhost:8080/api/v1/customers/${id_customer}/carts`
-        );
-        setCartData(res.data.data || []);
-      } catch (err) {
-        alert("Gagal mengambil data cart dari server");
-        setCartData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCartFromBackend();
-  }, [id_customer]);
+  const navigate = useNavigate();
 
   return (
     <div className="border-t pt-14">
@@ -51,16 +27,15 @@ const Cart = () => {
         <p>Loading cart ...</p>
       ) : (
         <div>
-          {cartData.length === 0 ? (
+          {cartItems.length === 0 ? (
             <p className="text-gray-500">Cart kosong.</p>
           ) : (
-            cartData.map((item, index) => {
+            cartItems.map((item, index) => {
               const productData =
                 item.product ||
                 products.find(
                   (product) =>
-                    product._id === item.id_product ||
-                    product.id_product === item.id_product
+                    String(product.id_product) === String(item.id_product)
                 );
 
               if (!productData) return null;
@@ -73,7 +48,13 @@ const Cart = () => {
                   <div className="flex items-start gap-6">
                     <img
                       className="w-16 sm:w-20"
-                      src={productData.image?.[0] || ""}
+                      src={
+                        productData.image
+                          ? Array.isArray(productData.image)
+                            ? productData.image[0]
+                            : productData.image
+                          : ""
+                      }
                       alt=""
                     />
                     <div>
@@ -96,7 +77,7 @@ const Cart = () => {
                     <button
                       onClick={() =>
                         updateQuantity(
-                          productData._id || productData.id_product,
+                          productData.id_product,
                           item.size,
                           Math.max(1, item.quantity - 1)
                         )
@@ -109,7 +90,7 @@ const Cart = () => {
                     <button
                       onClick={() =>
                         updateQuantity(
-                          productData._id || productData.id_product,
+                          productData.id_product,
                           item.size,
                           item.quantity + 1
                         )
@@ -123,7 +104,7 @@ const Cart = () => {
                   <img
                     onClick={() =>
                       updateQuantity(
-                        productData._id || productData.id_product,
+                        productData.id_product,
                         item.size,
                         0
                       )
@@ -145,7 +126,7 @@ const Cart = () => {
           <div className="w-full text-end">
             <button
               onClick={() => {
-                setCheckoutData(cartData);
+                setCheckoutData(cartItems);
                 navigate("/orders");
               }}
               className="bg-black text-white text-sm my-8 px-8 py-3"

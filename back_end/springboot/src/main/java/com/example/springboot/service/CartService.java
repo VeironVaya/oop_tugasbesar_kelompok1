@@ -43,13 +43,14 @@ public class CartService {
         Customer customer = customerRepository.findById(idCustomer)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + idCustomer));
 
-        Cart cart = cartRepository.findByCustomer(customer)
-                .orElseGet(() -> {
-                    Cart newCart = new Cart();
-                    newCart.setCustomer(customer);
-                    newCart.setTotal_price(0.0);
-                    return cartRepository.save(newCart);
-                });
+        Cart cart = customer.getCart();
+        if (cart == null) {
+            cart = new Cart();
+            cart.setCustomer(customer);
+            cart.setTotal_price(0.0);
+            customer.setCart(cart);
+            customerRepository.save(customer);
+        }
 
         Stock stock = stockRepository.findById(idStock)
                 .orElseThrow(() -> new EntityNotFoundException("Stock not found: " + idStock));
@@ -138,8 +139,7 @@ public class CartService {
         Customer customer = customerRepository.findById(idCustomer)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + idCustomer));
 
-        Cart cart = cartRepository.findByCustomer(customer)
-                .orElseThrow(() -> new EntityNotFoundException("Cart not found for customer ID: " + idCustomer));
+        Cart cart = customer.getCart();
 
         CartWithCartItemDto dto = mapCartToDto(cart);
         dto.setMessage("Cart retrieved successfully");
@@ -152,8 +152,7 @@ public class CartService {
         Customer customer = customerRepository.findById(idCustomer)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + idCustomer));
         // 2) fetch cart
-        Cart cart = cartRepository.findByCustomer(customer)
-                .orElseThrow(() -> new EntityNotFoundException("Cart not found for customer: " + idCustomer));
+        Cart cart = customer.getCart();
         // 3) fetch stock
         Stock stock = stockRepository.findById(idStock)
                 .orElseThrow(() -> new EntityNotFoundException("Stock not found: " + idStock));
@@ -191,8 +190,7 @@ public class CartService {
         Customer customer = customerRepository.findById(idCustomer)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + idCustomer));
         // 2) fetch cart
-        Cart cart = cartRepository.findByCustomer(customer)
-                .orElseThrow(() -> new EntityNotFoundException("Cart not found for customer: " + idCustomer));
+        Cart cart = customer.getCart();
         // 3) fetch stock
         Stock stock = stockRepository.findById(idStock)
                 .orElseThrow(() -> new EntityNotFoundException("Stock not found: " + idStock));

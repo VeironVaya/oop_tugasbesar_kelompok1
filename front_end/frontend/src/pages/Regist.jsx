@@ -1,49 +1,49 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { Link } from "react-router-dom";
-
 
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
 
+    if (!username.trim() || !password.trim()) {
+      setErrorMsg("Username dan password tidak boleh kosong.");
+      return;
+    }
+    setErrorMsg("");
+    setLoading(true);
+
     try {
       const response = await axios.post(
         "http://localhost:8080/api/v1/customers/registration",
-        {
-          username,
-          password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { username, password },
+        { headers: { "Content-Type": "application/json" } }
       );
 
       const result = response.data;
 
       if (response.status === 200 || result.status === true) {
         alert("Registrasi berhasil. Silakan login.");
+        setUsername("");
+        setPassword("");
         navigate("/login"); // redirect ke halaman login
       } else {
-        alert(result.message || "Registrasi gagal");
+        setErrorMsg(result.message || "Registrasi gagal");
       }
     } catch (error) {
-      console.error("Register error:", error);
       if (error.response) {
-        alert(
-          error.response.data.message || "Registrasi gagal (response error)"
-        );
+        setErrorMsg(error.response.data.message || "Registrasi gagal (response error)");
       } else {
-        alert("Terjadi kesalahan saat menghubungi server.");
+        setErrorMsg("Terjadi kesalahan saat menghubungi server.");
       }
     }
+    setLoading(false);
   };
 
   return (
@@ -59,14 +59,19 @@ const Register = () => {
           </h2>
         </div>
 
+        {errorMsg && (
+          <div className="mb-4 text-center text-red-600">{errorMsg}</div>
+        )}
+
         <div className="mb-6">
           <input
             type="text"
             placeholder="Username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={e => setUsername(e.target.value)}
             required
             className="w-full border-b border-black focus:outline-none py-2 placeholder-gray-400"
+            disabled={loading}
           />
         </div>
 
@@ -75,17 +80,19 @@ const Register = () => {
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             required
             className="w-full border-b border-black focus:outline-none py-2 placeholder-gray-400"
+            disabled={loading}
           />
         </div>
 
         <button
           type="submit"
+          disabled={loading}
           className="w-full bg-black text-white py-2 rounded-md font-semibold tracking-wide hover:bg-gray-800"
         >
-          REGISTER
+          {loading ? "Processing..." : "REGISTER"}
         </button>
 
         <p className="text-center text-sm text-black mt-6">

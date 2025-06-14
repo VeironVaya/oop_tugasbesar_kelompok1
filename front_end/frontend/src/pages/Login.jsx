@@ -1,68 +1,73 @@
-import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { ShopContext } from "../context/ShopContext";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { useShop } from "../context/ShopContext";
+
+// Helper untuk menyimpan data ke localStorage
+const storeAuthData = (data) => {
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("tokenType", data.tokenType);
+  localStorage.setItem("tokenExpiry", data.expiredAt);
+  localStorage.setItem("id_customer", data.id_customer);
+};
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { setUser, setUserRole } = useContext(ShopContext);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const { setUser, setUserRole } = useShop();
   const navigate = useNavigate();
 
+  // Handler login utama
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
 
+    if (!username.trim() || !password.trim()) {
+      setErrorMsg("Username dan password tidak boleh kosong.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await axios.post(
+      const res = await axios.post(
         "http://localhost:8080/api/v1/auth/login/login-customer",
-        {
-          username: username,
-          password: password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { username, password },
+        { headers: { "Content-Type": "application/json" } }
       );
-
-      const result = response.data;
+      const result = res.data;
 
       if (result.status) {
-        // Simpan token di localStorage
-        localStorage.setItem("token", result.data.token);
-        localStorage.setItem("tokenType", result.data.tokenType);
-        localStorage.setItem("tokenExpiry", result.data.expiredAt);
+        storeAuthData(result.data);
 
-        // Simpan id_customer di localStorage
-         localStorage.setItem("id_customer", result.data.id_customer);
+        setUser({ username, id_customer: result.data.id_customer });
 
-        // Set user dan role di context
-        setUser({ username, id_customer: result.data.id_customer })
-
-        // Sementara role ditentukan dari username
+        // Menentukan role user (sementara via username)
         const role = username === "admin" ? "admin" : "user";
         setUserRole(role);
         localStorage.setItem("role", role);
 
         // Redirect sesuai role
-        if (role === "admin") {
-          navigate("/admin/add-items");
-        } else {
-          navigate("/");
-        }
+        navigate(role === "admin" ? "/admin/add-items" : "/");
       } else {
-        alert(result.message || "Username atau password salah");
+        setErrorMsg(result.message || "Username atau password salah");
       }
     } catch (error) {
-      console.error("Login error:", error);
       if (error.response) {
-        alert(error.response.data.message || "Login gagal (response error)");
+        setErrorMsg(error.response.data.message || "Login gagal (response error)");
       } else {
-        alert("Terjadi kesalahan saat menghubungi server.");
+        setErrorMsg("Terjadi kesalahan saat menghubungi server.");
       }
     }
+    setLoading(false);
+  };
+
+  // Handler untuk login sebagai admin
+  const loginAsAdmin = () => {
+    setUsername("admin");
+    setPassword("admin123");
+    setErrorMsg("");
   };
 
   return (
@@ -79,31 +84,38 @@ const Login = () => {
           </h2>
         </div>
 
-        {/* Input: Username */}
+        {/* Error message */}
+        {errorMsg && (
+          <div className="mb-4 text-center text-red-600">{errorMsg}</div>
+        )}
+
+        {/* Input Username */}
         <div className="mb-6">
           <input
             type="text"
             placeholder="Username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={e => setUsername(e.target.value)}
             required
+            disabled={loading}
             className="w-full border-b border-black focus:outline-none py-2 placeholder-gray-400"
           />
         </div>
 
-        {/* Input: Password */}
+        {/* Input Password */}
         <div className="mb-2">
           <input
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             required
+            disabled={loading}
             className="w-full border-b border-black focus:outline-none py-2 placeholder-gray-400"
           />
         </div>
 
-        {/* Link: Forgot & Create */}
+        {/* Links */}
         <div className="flex justify-between text-sm text-black mt-2 mb-6">
           <a href="#" className="hover:underline">
             Forget Your Password?
@@ -113,23 +125,22 @@ const Login = () => {
           </Link>
         </div>
 
-        {/* Button: Login */}
+        {/* Button Login */}
         <button
           type="submit"
+          disabled={loading}
           className="w-full bg-black text-white py-2 rounded-md font-semibold tracking-wide hover:bg-gray-800"
         >
-          LOGIN
+          {loading ? "Processing..." : "LOGIN"}
         </button>
 
-        {/* Link: Login as Admin */}
+        {/* Button Login as Admin */}
         <p className="text-center text-sm text-black mt-6">
           <button
             type="button"
-            onClick={() => {
-              setUsername("admin");
-              setPassword("admin123");
-            }}
+            onClick={loginAsAdmin}
             className="hover:underline"
+            disabled={loading}
           >
             Login as Admin
           </button>
