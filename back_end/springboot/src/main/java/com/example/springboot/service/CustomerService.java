@@ -3,6 +3,7 @@ package com.example.springboot.service;
 import com.example.springboot.dto.request.CustomerDto;
 import com.example.springboot.dto.response.CustomerResponseDto;
 import com.example.springboot.entity.Customer;
+import com.example.springboot.entity.Cart;
 import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.repository.AdminRepository;
 import com.example.springboot.repository.CustomerRepository;
@@ -30,6 +31,12 @@ public class CustomerService {
         String hashed = encoder.encode(dto.getPassword());
 
         Customer customer = new Customer(dto.getUsername(), hashed);
+
+        Cart cart = new Cart();
+        cart.setTotal_price(0.0);
+        cart.setCustomer(customer);
+        customer.setCart(cart);
+
         Customer saved = repo.save(customer);
 
         return new CustomerResponseDto(true, saved.getIdCustomer(), saved.getUsername(),
