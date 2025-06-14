@@ -126,7 +126,7 @@ public class ProductService {
 
     public ProductWithStockResponseDto patchProductWithStock(Long id, ProductRequestDto dto) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product with ID " + id + " not found"));
+                .orElseThrow(() -> new InvalidDataException("Product with ID " + id + " not found"));
 
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
             throw new InvalidDataException("Name is required");
@@ -139,15 +139,21 @@ public class ProductService {
             throw new InvalidDataException("Product category cannot be empty");
         }
 
+        if (dto.getUrlimage() == null || dto.getUrlimage().trim().isEmpty()) {
+            throw new InvalidDataException("Product category cannot be empty");
+        }
+
         List<Stock> stocks = stockRepository.findAllByProduct_IdProduct(id);
         ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
 
+        product.setUrlimage(dto.getUrlimage());
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
         product.setPrice(dto.getPrice());
         product.setCategory(dto.getCategory());
         productRepository.save(product);
 
+        resp.setUrlimage(product.getUrlimage());
         resp.setName(product.getName());
         resp.setDescription(product.getDescription());
         resp.setPrice(product.getPrice());

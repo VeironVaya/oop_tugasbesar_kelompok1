@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.springboot.dto.response.SimpleResponseDto;
 import com.example.springboot.dto.response.TransactionResponseDetailDto;
 import com.example.springboot.exception.InvalidDataException;
 import com.example.springboot.service.TransactionService;
@@ -110,11 +111,23 @@ public class TransactionController {
 
     // 2) Get one transaction detail for a given customer
     @GetMapping("/customers/{idCustomer}/transactions/{idTransaction}")
-    public ResponseEntity<TransactionResponseDetailDto> getCustomerTransactionDetail(
+    public ResponseEntity<?> getCustomerTransactionDetail(
             @PathVariable Long idCustomer,
             @PathVariable Long idTransaction) {
-        TransactionResponseDetailDto dto = transactionService.getCustomerTransactionDetail(idCustomer, idTransaction);
-        return ResponseEntity.ok(dto);
+        try {
+            TransactionResponseDetailDto dto = transactionService.getCustomerTransactionDetail(idCustomer,
+                    idTransaction);
+            return ResponseEntity.ok(dto);
+        } catch (EntityNotFoundException ex) {
+            SimpleResponseDto error = new SimpleResponseDto();
+            error.setMessage(ex.getMessage());
+            error.setStatus(false);
+            // Log if desired: log.warn("Not found: {}", ex.getMessage());
+            // Return 404 with a simple error body or empty.
+            // You can create a simple error DTO, or just return a message.
+            return ResponseEntity.badRequest().body(error);
+            // Alternatively: return ResponseEntity.notFound().build();
+        }
     }
 
     // 3) Admin: list all transactions, or filter by id if provided
