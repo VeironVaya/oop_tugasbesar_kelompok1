@@ -98,6 +98,7 @@ public class TransactionService {
             temp.setCategory(stock.getProduct().getCategory());
             temp.setSize(stock.getSize());
             temp.setQuantity(ci.getItem_quantity());
+            temp.setUrlimage(stock.getProduct().getUrlimage());
             temp.setTotalPrice(lineTotal);
 
             temps.add(temp);
@@ -125,6 +126,7 @@ public class TransactionService {
         List<CartItemTempResponseDto> lineDtos = temps.stream()
                 .map(temp -> {
                     CartItemTempResponseDto d = new CartItemTempResponseDto();
+                    d.setUrlimage(temp.getUrlimage());
                     d.setIdCartItemTemp(temp.getIdCartItemTemp());
                     d.setName(temp.getName());
                     d.setDescription(temp.getDescription());
@@ -157,6 +159,7 @@ public class TransactionService {
         List<CartItemTempResponseDto> items = temps.stream()
                 .map(temp -> {
                     CartItemTempResponseDto d = new CartItemTempResponseDto();
+                    d.setUrlimage(temp.getUrlimage());
                     d.setIdCartItemTemp(temp.getIdCartItemTemp());
                     d.setName(temp.getName());
                     d.setDescription(temp.getDescription());

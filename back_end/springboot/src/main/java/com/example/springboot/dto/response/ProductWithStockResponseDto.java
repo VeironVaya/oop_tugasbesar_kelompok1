@@ -18,6 +18,7 @@ public class ProductWithStockResponseDto {
     private Long idProduct;
     private String name;
     private String description;
+    private String urlimage;
     private double price;
     private String category;
     private List<StockResponseDto> stocks;

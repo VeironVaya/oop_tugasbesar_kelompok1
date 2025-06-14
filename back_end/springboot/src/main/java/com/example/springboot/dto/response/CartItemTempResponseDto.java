@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class CartItemTempResponseDto {
     private Long idCartItemTemp;
+    private String urlimage;
     private String name;
     private String description;
     private String category;

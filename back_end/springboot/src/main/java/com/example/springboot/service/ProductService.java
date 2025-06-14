@@ -60,6 +60,7 @@ public class ProductService {
         }
 
         Product p = new Product();
+        p.setUrlimage(dto.getUrlimage());
         p.setName(dto.getName());
         p.setDescription(dto.getDescription());
         p.setPrice(dto.getPrice());
@@ -75,6 +76,7 @@ public class ProductService {
 
         ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
         resp.setIdProduct(saved.getIdProduct());
+        resp.setUrlimage(saved.getUrlimage());
         resp.setName(saved.getName());
         resp.setDescription(saved.getDescription());
         resp.setPrice(saved.getPrice());
@@ -106,6 +108,7 @@ public class ProductService {
 
     private ProductResponseDto toDto(Product p) {
         ProductResponseDto dto = new ProductResponseDto();
+        dto.setUrlimage(p.getUrlimage());
         dto.setIdProduct(p.getIdProduct());
         dto.setName(p.getName());
         dto.setDescription(p.getDescription());
@@ -173,6 +176,7 @@ public class ProductService {
 
         List<Stock> stocks = stockRepository.findAllByProduct_IdProduct(id);
         ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
+        resp.setUrlimage(product.getUrlimage());
         resp.setIdProduct(id);
         resp.setStatus("true");
         resp.setMessage("product retrieve successfully");
@@ -235,6 +239,7 @@ public class ProductService {
 
         // 6) assemble ProductWithCustomerResponseDto
         ProductWithCustomerResponseDto out = new ProductWithCustomerResponseDto();
+        out.setUrlimage(product.getUrlimage());
         out.setIdProduct(product.getIdProduct());
         out.setName(product.getName());
         out.setDescription(product.getDescription());
@@ -260,6 +265,7 @@ public class ProductService {
 
     private ProductResponseDto convertToDto(Product product) {
         ProductResponseDto dto = new ProductResponseDto();
+        dto.setUrlimage(product.getUrlimage());
         dto.setIdProduct(product.getIdProduct());
         dto.setName(product.getName());
         dto.setDescription(product.getDescription());
