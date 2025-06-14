@@ -25,6 +25,7 @@ public class CartItemTemp {
     @JoinColumn(name = "id_transaction_history", nullable = false)
     private TransactionHistory transactionHistory;
 
+    private String urlimage; // this is newly udded
     private String name;
     private String description;
     private String category;

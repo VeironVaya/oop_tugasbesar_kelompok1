@@ -21,6 +21,7 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idProduct;
 
+    private String urlimage; // newly added before there is no this field
     private String name;
     private String description;
     private double price;

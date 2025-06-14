@@ -118,11 +118,13 @@ public class CartService {
         String description = ci.getStock().getProduct().getDescription();
         Double price = ci.getStock().getProduct().getPrice();
         String category = ci.getStock().getProduct().getCategory();
+        String urlimage = ci.getStock().getProduct().getUrlimage();
 
         ciDto.setName(name);
         ciDto.setDescription(description);
         ciDto.setPrice(price);
         ciDto.setCategory(category);
+        ciDto.setUrlimage(urlimage);
 
         // Stock-level fields
         ciDto.setStockQuantity(ci.getStock().getStock_quantity());

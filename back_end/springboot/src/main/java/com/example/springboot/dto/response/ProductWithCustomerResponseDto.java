@@ -13,6 +13,7 @@ public class ProductWithCustomerResponseDto {
     private Long idProduct;
     private String name;
     private String description;
+    private String urlimage;
     private Double price;
     private String category;
     private Boolean isFavorite;

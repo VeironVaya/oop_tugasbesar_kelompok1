@@ -60,6 +60,7 @@ public class ProductService {
         }
 
         Product p = new Product();
+        p.setUrlimage(dto.getUrlimage());
         p.setName(dto.getName());
         p.setDescription(dto.getDescription());
         p.setPrice(dto.getPrice());
@@ -75,6 +76,7 @@ public class ProductService {
 
         ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
         resp.setIdProduct(saved.getIdProduct());
+        resp.setUrlimage(saved.getUrlimage());
         resp.setName(saved.getName());
         resp.setDescription(saved.getDescription());
         resp.setPrice(saved.getPrice());
@@ -106,6 +108,7 @@ public class ProductService {
 
     private ProductResponseDto toDto(Product p) {
         ProductResponseDto dto = new ProductResponseDto();
+        dto.setUrlimage(p.getUrlimage());
         dto.setIdProduct(p.getIdProduct());
         dto.setName(p.getName());
         dto.setDescription(p.getDescription());
@@ -123,7 +126,7 @@ public class ProductService {
 
     public ProductWithStockResponseDto patchProductWithStock(Long id, ProductRequestDto dto) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product with ID " + id + " not found"));
+                .orElseThrow(() -> new InvalidDataException("Product with ID " + id + " not found"));
 
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
             throw new InvalidDataException("Name is required");
@@ -136,15 +139,21 @@ public class ProductService {
             throw new InvalidDataException("Product category cannot be empty");
         }
 
+        if (dto.getUrlimage() == null || dto.getUrlimage().trim().isEmpty()) {
+            throw new InvalidDataException("Product category cannot be empty");
+        }
+
         List<Stock> stocks = stockRepository.findAllByProduct_IdProduct(id);
         ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
 
+        product.setUrlimage(dto.getUrlimage());
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
         product.setPrice(dto.getPrice());
         product.setCategory(dto.getCategory());
         productRepository.save(product);
 
+        resp.setUrlimage(product.getUrlimage());
         resp.setName(product.getName());
         resp.setDescription(product.getDescription());
         resp.setPrice(product.getPrice());
@@ -173,6 +182,7 @@ public class ProductService {
 
         List<Stock> stocks = stockRepository.findAllByProduct_IdProduct(id);
         ProductWithStockResponseDto resp = new ProductWithStockResponseDto();
+        resp.setUrlimage(product.getUrlimage());
         resp.setIdProduct(id);
         resp.setStatus("true");
         resp.setMessage("product retrieve successfully");
@@ -235,6 +245,7 @@ public class ProductService {
 
         // 6) assemble ProductWithCustomerResponseDto
         ProductWithCustomerResponseDto out = new ProductWithCustomerResponseDto();
+        out.setUrlimage(product.getUrlimage());
         out.setIdProduct(product.getIdProduct());
         out.setName(product.getName());
         out.setDescription(product.getDescription());
@@ -260,6 +271,7 @@ public class ProductService {
 
     private ProductResponseDto convertToDto(Product product) {
         ProductResponseDto dto = new ProductResponseDto();
+        dto.setUrlimage(product.getUrlimage());
         dto.setIdProduct(product.getIdProduct());
         dto.setName(product.getName());
         dto.setDescription(product.getDescription());
