@@ -50,11 +50,37 @@ const Navbar = () => {
         <img src={assets.logo} className="w-36" alt="Logo" />
 
         {/* Navigation */}
-        <ul className="hidden sm:flex gap-5 text-sm text-gray-700">
-          <NavLink to="/">HOME</NavLink>
-          <NavLink to="/collection">COLLECTION</NavLink>
-          <NavLink to="/about">ABOUT</NavLink>
-          {/* <NavLink to="/contact">CONTACT</NavLink> */}
+        <ul className="hidden sm:flex gap-5 text-sm">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              isActive
+                ? "font-semibold text-black"
+                : "text-gray-500 hover:text-black transition"
+            }
+          >
+            HOME
+          </NavLink>
+          <NavLink
+            to="/collection"
+            className={({ isActive }) =>
+              isActive
+                ? "font-semibold text-black"
+                : "text-gray-500 hover:text-black transition"
+            }
+          >
+            COLLECTION
+          </NavLink>
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              isActive
+                ? "font-semibold text-black"
+                : "text-gray-500 hover:text-black transition"
+            }
+          >
+            ABOUT
+          </NavLink>
         </ul>
 
         {/* Right side */}

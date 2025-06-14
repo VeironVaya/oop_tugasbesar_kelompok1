@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
-import { assets } from "../assets/assets";
-import axios from "axios";
+import { useShop } from "../context/ShopContext";
 
 const CATEGORY_MAP = {
   Topwear: "TopWare",
@@ -11,67 +10,34 @@ const CATEGORY_MAP = {
   Accessories: "accessories",
 };
 
+const categoryList = ["Topwear", "Bottomwear", "Footwear", "Accessories"];
+
 const Collection = () => {
-  const [filterProducts, setFilterProducts] = useState([]);
-  const [subCategory, setSubCategory] = useState([]);
+  const { products, loading, error } = useShop();
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [search, setSearch] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  // Toggle Subcategory Filter
-  const toggleSubCategory = (e) => {
-    if (subCategory.includes(e.target.value)) {
-      setSubCategory((prev) => prev.filter((a) => a !== e.target.value));
-    } else {
-      setSubCategory((prev) => [...prev, e.target.value]);
-    }
+  // FILTER PRODUK
+  let filterProducts = products;
+  if (selectedCategory) {
+    filterProducts = filterProducts.filter(
+      (item) =>
+        item.category &&
+        item.category.toLowerCase() ===
+          (CATEGORY_MAP[selectedCategory] || selectedCategory).toLowerCase()
+    );
+  }
+  if (search) {
+    filterProducts = filterProducts.filter((item) =>
+      item.name?.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+
+  // Checkbox seperti radio: hanya satu bisa aktif
+  const handleCheckbox = (cat) => {
+    setSelectedCategory(selectedCategory === cat ? "" : cat);
   };
-
-  // Fetch API sesuai filter
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-
-      try {
-        let apiUrl = "http://localhost:8080/api/v1/products";
-        // Jika ada filter kategori, kirim ?category=xxx (atau jika >1, bisa pakai array) 9NTAR SESUAIIN LAGI SETELAH QA PROCESS)
-        if (subCategory.length === 1) {
-          apiUrl += `?category=${encodeURIComponent(
-            CATEGORY_MAP[subCategory[0]] || subCategory[0]
-          )}`;
-        }
-
-        const res = await axios.get(apiUrl);
-        let products = res.data.data || [];
-
-        // Filter pencarian (search)
-        if (showSearch && search) {
-          products = products.filter((item) =>
-            item.name.toLowerCase().includes(search.toLowerCase())
-          );
-        }
-
-        // Filter multi subcategory di frontend (ini backend hanya support satu kategori di query???????)
-        if (subCategory.length > 1) {
-          products = products.filter((item) =>
-            subCategory
-              .map((cat) => CATEGORY_MAP[cat] || cat)
-              .includes(item.category)
-          );
-        }
-
-        setFilterProducts(products);
-      } catch (err) {
-        setFilterProducts([]);
-        alert("Gagal mengambil data produk dari server.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [subCategory, search, showSearch]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
@@ -84,12 +50,12 @@ const Collection = () => {
           FILTERS
           <img
             className={`h-3 sm:hidden ${showFilter ? " rotate-90" : ""}`}
-            src={assets.dropdown_icon}
+            src="/dropdown_icon.png" // Ganti dengan path asset dropdown-icon kamu
             alt=""
           />
         </p>
 
-        {/* Sub Category Filter Only */}
+        {/* Category Filter */}
         <div
           className={`border border-gray-300 pl-5 py-3 mt-6 ${
             showFilter ? "" : "hidden"
@@ -97,17 +63,29 @@ const Collection = () => {
         >
           <p className="mb-3 text-sm font-medium">TYPE</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {["Topwear", "Bottomwear", "Footwear", "Accessories"].map((cat) => (
-              <p className="flex gap-2" key={cat}>
+            {categoryList.map((cat) => (
+              <label
+                className="flex items-center gap-2 cursor-pointer"
+                key={cat}
+              >
                 <input
-                  className="w-3"
-                  value={cat}
-                  onChange={toggleSubCategory}
-                  checked={subCategory.includes(cat)}
+                  className="w-4 h-4"
                   type="checkbox"
-                />{" "}
-                {cat}{" "}
-              </p>
+                  checked={selectedCategory === cat}
+                  onChange={() => handleCheckbox(cat)}
+                  style={{
+                    accentColor: selectedCategory === cat ? "#1a1a1a" : "#bdbdbd",
+                  }}
+                />
+                <span
+                  style={{
+                    color: selectedCategory === cat ? "#1a1a1a" : "#bdbdbd",
+                    fontWeight: selectedCategory === cat ? "bold" : "normal",
+                  }}
+                >
+                  {cat}
+                </span>
+              </label>
             ))}
           </div>
         </div>
@@ -126,25 +104,32 @@ const Collection = () => {
             placeholder="Search products..."
             className="border px-3 py-2 rounded w-full max-w-xs"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setShowSearch(true);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
         {loading ? (
           <p>Loading products...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
             {filterProducts.length === 0 ? (
-              <p className="text-gray-500 col-span-full">Produk tidak ditemukan.</p>
+              <p className="text-gray-500 col-span-full">
+                Produk tidak ditemukan.
+              </p>
             ) : (
-              filterProducts.map((item, index) => (
+              filterProducts.map((item) => (
                 <ProductItem
-                  key={index}
+                  key={item.id_product || item._id}
                   id={item.id_product || item._id}
-                  image={item.image}
+                  image={
+                    item.image && item.image.length > 0
+                      ? Array.isArray(item.image)
+                        ? item.image
+                        : [item.image]
+                      : ["/default.jpg"] // fallback default image jika benar-benar kosong
+                  }
                   name={item.name}
                   price={item.price}
                 />
