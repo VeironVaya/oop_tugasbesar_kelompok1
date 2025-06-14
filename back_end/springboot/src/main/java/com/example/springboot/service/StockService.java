@@ -33,8 +33,8 @@ public class StockService {
         if (dto.getSize() == null || dto.getSize().trim().isEmpty()) {
             throw new InvalidDataException("Size is required");
         }
-        if (dto.getStockQuantity() < 0) {
-            throw new InvalidDataException("Stock must be non-negative");
+        if (dto.getStockQuantity() <= 0) {
+            throw new InvalidDataException("Stock must be non-negative and not 0");
         }
 
         Product product = productRepository.findById(productId)

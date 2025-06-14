@@ -32,10 +32,6 @@ public class Stock {
     private String size;
     private int stock_quantity;
 
-    // One Stock can appear in multiple CartItemTemp entries
-    @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CartItemTemp> tempItems;
-
     // One Stock can appear in multiple CartItem entries
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> cartItems;

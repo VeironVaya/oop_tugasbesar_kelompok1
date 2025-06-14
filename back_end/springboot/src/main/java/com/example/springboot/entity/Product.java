@@ -28,7 +28,7 @@ public class Product {
     // e.g. Top, Bot, Foot, Acc
     private String category;
 
-        // One Product can have many Stock entries
+    // One Product can have many Stock entries
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Stock> stocks;
 
@@ -36,6 +36,3 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FavoriteProduct> favoritedBy;
 }
-
-
-

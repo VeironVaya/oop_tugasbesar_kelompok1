@@ -25,11 +25,10 @@ public class CartItemTemp {
     @JoinColumn(name = "id_transaction_history", nullable = false)
     private TransactionHistory transactionHistory;
 
-    // Many temporary cart items refer to one Stock
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_stock", nullable = false)
-    private Stock stock;
-
+    private String name;
+    private String description;
+    private String category;
+    private String size;
     private double totalPrice;
     private int quantity;
 }

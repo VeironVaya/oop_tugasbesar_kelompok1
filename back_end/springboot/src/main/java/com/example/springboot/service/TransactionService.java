@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.springboot.dto.response.CartItemTempResponseDto;
-import com.example.springboot.dto.response.StockResponseDto;
 import com.example.springboot.dto.response.TransactionResponseDetailDto;
 import com.example.springboot.entity.Cart;
 import com.example.springboot.entity.CartItem;
@@ -65,8 +64,7 @@ public class TransactionService {
         }
 
         // 2) Create TransactionHistory
-        TransactionHistory txn;
-        txn = new TransactionHistory();
+        TransactionHistory txn = new TransactionHistory();
         txn.setCustomer(cust);
         txn.setDate(LocalDate.now());
         txn.setPaymentStatus("Unpayed");
@@ -74,10 +72,10 @@ public class TransactionService {
         txn = txnRepo.save(txn);
 
         double grandTotal = 0;
-
-        // 3) For each CartItem, create a CartItemTemp
         List<CartItemTemp> temps = new ArrayList<>();
-        for (var ci : items) {
+
+        // 3) Snapshot each CartItem → CartItemTemp
+        for (CartItem ci : items) {
             Stock stock = stockRepo.findById(ci.getStock().getIdStock())
                     .orElseThrow(() -> new EntityNotFoundException(
                             "Stock not found with ID: " + ci.getStock().getIdStock()));
@@ -88,23 +86,33 @@ public class TransactionService {
             }
             stock.setStock_quantity(stock.getStock_quantity() - ci.getItem_quantity());
 
-            // Snapshot line‐total
+            // Compute line total
             double lineTotal = ci.getItem_quantity() * stock.getProduct().getPrice();
             grandTotal += lineTotal;
 
+            // Build snapshot
             CartItemTemp temp = new CartItemTemp();
             temp.setTransactionHistory(txn);
-            temp.setStock(stock);
+            temp.setName(stock.getProduct().getName());
+            temp.setDescription(stock.getProduct().getDescription());
+            temp.setCategory(stock.getProduct().getCategory());
+            temp.setSize(stock.getSize());
             temp.setQuantity(ci.getItem_quantity());
             temp.setTotalPrice(lineTotal);
+
             temps.add(temp);
         }
-        // Persist all temps and update stocks in one go
+
+        // 3a) Persist updated stock quantities
         stockRepo.saveAll(
-                temps.stream().map(CartItemTemp::getStock).collect(Collectors.toList()));
+                items.stream()
+                        .map(CartItem::getStock)
+                        .collect(Collectors.toList()));
+
+        // 3b) Persist your snapshots
         tempRepo.saveAll(temps);
 
-        // 4) Update txn total
+        // 4) Finalize transaction
         txn.setTotalPrice(grandTotal);
         txnRepo.save(txn);
 
@@ -113,22 +121,17 @@ public class TransactionService {
         cart.setTotal_price(0.0);
         cartRepo.save(cart);
 
-        // 6) Build & return DTO
+        // 6) Map to DTOs
         List<CartItemTempResponseDto> lineDtos = temps.stream()
                 .map(temp -> {
                     CartItemTempResponseDto d = new CartItemTempResponseDto();
                     d.setIdCartItemTemp(temp.getIdCartItemTemp());
+                    d.setName(temp.getName());
+                    d.setDescription(temp.getDescription());
+                    d.setCategory(temp.getCategory());
+                    d.setSize(temp.getSize());
                     d.setQuantity(temp.getQuantity());
                     d.setTotalPrice(temp.getTotalPrice());
-
-                    StockResponseDto sd = new StockResponseDto();
-                    sd.setStatus("true");
-                    sd.setMessage("OK");
-                    sd.setIdStock(temp.getStock().getIdStock());
-                    sd.setSize(temp.getStock().getSize());
-                    sd.setStockQuantity(temp.getStock().getStock_quantity());
-                    d.setStock(sd);
-
                     return d;
                 })
                 .collect(Collectors.toList());
@@ -147,25 +150,26 @@ public class TransactionService {
     }
 
     private TransactionResponseDetailDto mapToDto(TransactionHistory txn) {
-        var temps = tempRepo.findByTransactionHistory(txn);
+        // fetch the snapshots
+        List<CartItemTemp> temps = tempRepo.findByTransactionHistory(txn);
 
-        List<CartItemTempResponseDto> items = temps.stream().map(temp -> {
-            CartItemTempResponseDto d = new CartItemTempResponseDto();
-            d.setIdCartItemTemp(temp.getIdCartItemTemp());
-            d.setQuantity(temp.getQuantity());
-            d.setTotalPrice(temp.getTotalPrice());
+        // map each snapshot row into your flattened DTO
+        List<CartItemTempResponseDto> items = temps.stream()
+                .map(temp -> {
+                    CartItemTempResponseDto d = new CartItemTempResponseDto();
+                    d.setIdCartItemTemp(temp.getIdCartItemTemp());
+                    d.setName(temp.getName());
+                    d.setDescription(temp.getDescription());
+                    d.setCategory(temp.getCategory());
+                    d.setSize(temp.getSize());
+                    d.setQuantity(temp.getQuantity());
+                    d.setTotalPrice(temp.getTotalPrice());
+                    return d;
+                })
+                .collect(Collectors.toList());
 
-            StockResponseDto sd = new StockResponseDto();
-            sd.setStatus("true");
-            sd.setMessage("OK");
-            sd.setIdStock(temp.getStock().getIdStock());
-            sd.setSize(temp.getStock().getSize());
-            sd.setStockQuantity(temp.getStock().getStock_quantity());
-            d.setStock(sd);
-            return d;
-        }).toList();
-
-        var out = new TransactionResponseDetailDto();
+        // build the outer transaction DTO
+        TransactionResponseDetailDto out = new TransactionResponseDetailDto();
         out.setStatus(true);
         out.setMessage("OK");
         out.setIdTransaction(txn.getIdTransactionHistory());
