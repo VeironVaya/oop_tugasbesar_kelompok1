@@ -1,12 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets"; // adjust path if needed
 
 const Navbar = () => {
   const navigate = useNavigate();
 
+  // Get token
+  const token = localStorage.getItem("token");
+  console.log("Token in Navbar:", token);
+
+  useEffect(() => {
+    if (!token) {
+      alert("Unauthorized: Please log in first.");
+      navigate("/login");
+    }
+  }, [navigate, token]);
+
   const handleLogout = () => {
-    // Clear auth data here if needed
+    localStorage.removeItem("token"); // Remove token
+    console.log("Token removed. Logging out...");
     navigate("/login");
   };
 

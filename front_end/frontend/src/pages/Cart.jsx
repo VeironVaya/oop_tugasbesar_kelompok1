@@ -1,22 +1,41 @@
-import React from "react";
+// === src/pages/Cart.jsx ===
+
+import React, { useEffect } from "react";
 import Title from "../components/Title";
+import CartTotal from "../components/CartTotal";
 import { useShop } from "../context/ShopContext";
 import { assets } from "../assets/assets";
-import CartTotal from "../components/CartTotal";
 import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
-  const {
-    products,
-    currency,
-    cartItems,
-    updateQuantity,
-    setCheckoutData,
-    loading, // loading dari context
+  // ✅ PERBAIKAN: Tambahkan 'loading' dan semua fungsi yang dibutuhkan di sini
+  const { 
+    cartItems, 
+    updateQuantity, 
+    getCartAmount, // Anda juga memerlukan ini untuk CartTotal
+    currency, 
+    loading, 
+    user, 
+    handleCheckout 
   } = useShop();
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const onCheckoutClick = async () => {
+    try {
+      await handleCheckout();
+      alert("Checkout berhasil! Pesanan Anda telah dibuat.");
+      navigate("/orders");
+    } catch (error) {
+      alert(error.message || "Terjadi kesalahan saat checkout.");
+    }
+  };
+
+  // Sisa kode di bawah ini sudah benar dan tidak perlu diubah
   return (
     <div className="border-t pt-14">
       <div className="text-2xl mb-3">
@@ -31,40 +50,27 @@ const Cart = () => {
             <p className="text-gray-500">Cart kosong.</p>
           ) : (
             cartItems.map((item, index) => {
-              const productData =
-                item.product ||
-                products.find(
-                  (product) =>
-                    String(product.id_product) === String(item.id_product)
-                );
-
-              if (!productData) return null;
+              const idToUpdate = item.stockId || item.productId;
 
               return (
                 <div
-                  key={index}
+                  key={item.idCartItem || index}
                   className="py-4 border-t border-b text-gray-700 grid grid-cols-[4fr_0.5fr_0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] items-center gap-4"
                 >
                   <div className="flex items-start gap-6">
                     <img
                       className="w-16 sm:w-20"
-                      src={
-                        productData.image
-                          ? Array.isArray(productData.image)
-                            ? productData.image[0]
-                            : productData.image
-                          : ""
-                      }
-                      alt=""
+                      src={item.image || "/default.jpg"}
+                      alt={item.name}
                     />
                     <div>
                       <p className="text-xs sm:text-lg font-medium">
-                        {productData.name}
+                        {item.name}
                       </p>
                       <div className="flex items-center gap-5 mt-2">
                         <p>
                           {currency}
-                          {productData.price}
+                          {item.price?.toLocaleString()}
                         </p>
                         <p className="px-2 sm:px-3 sm:py-1 border bg-slate-50">
                           {item.size}
@@ -73,45 +79,23 @@ const Cart = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-3">
                     <button
-                      onClick={() =>
-                        updateQuantity(
-                          productData.id_product,
-                          item.size,
-                          Math.max(1, item.quantity - 1)
-                        )
-                      }
+                      onClick={() => updateQuantity(idToUpdate, item.quantity - 1)}
                       className="px-2 py-1 border rounded text-lg"
-                    >
-                      -
-                    </button>
+                    > - </button>
                     <span>{item.quantity}</span>
                     <button
-                      onClick={() =>
-                        updateQuantity(
-                          productData.id_product,
-                          item.size,
-                          item.quantity + 1
-                        )
-                      }
+                      onClick={() => updateQuantity(idToUpdate, item.quantity + 1)}
                       className="px-2 py-1 border rounded text-lg"
-                    >
-                      +
-                    </button>
+                    > + </button>
                   </div>
 
                   <img
-                    onClick={() =>
-                      updateQuantity(
-                        productData.id_product,
-                        item.size,
-                        0
-                      )
-                    }
-                    className="w-4 mr-4 sm:w-5 cursor-pointer"
+                    onClick={() => updateQuantity(idToUpdate, 0)}
+                    className="w-4 mr-4 sm:w-5 cursor-pointer justify-self-end"
                     src={assets.bin_icon}
-                    alt=""
+                    alt="Delete"
                   />
                 </div>
               );
@@ -125,11 +109,9 @@ const Cart = () => {
           <CartTotal />
           <div className="w-full text-end">
             <button
-              onClick={() => {
-                setCheckoutData(cartItems);
-                navigate("/orders");
-              }}
+              onClick={onCheckoutClick}
               className="bg-black text-white text-sm my-8 px-8 py-3"
+              disabled={cartItems.length === 0}
             >
               CHECKOUT
             </button>

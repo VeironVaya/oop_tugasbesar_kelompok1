@@ -1,20 +1,35 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
 const Order = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Ambil semua transaksi dari API saat halaman dimuat
+  // === GET TOKEN FROM LOCAL STORAGE ===
+  const token = localStorage.getItem("token");
+  console.log("Token for Order page:", token);
+
   useEffect(() => {
+    if (!token) {
+      alert("Unauthorized: Please log in first.");
+      navigate("/login");
+      return;
+    }
+
     const fetchOrders = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8080/api/v1/transactions"
+          "http://localhost:8080/api/v1/transactions",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
-        setOrders(res.data); // res.data = array of transaction
+        setOrders(res.data);
       } catch (error) {
         console.error("Gagal mengambil transaksi:", error);
         alert("Gagal mengambil data transaksi.");
@@ -24,22 +39,27 @@ const Order = () => {
     };
 
     fetchOrders();
-  }, []);
+  }, [navigate, token]);
 
-  // Filter berdasarkan ID transaksi saja
+  // === FILTER ORDERS ===
   const filteredOrders = orders.filter((order) => {
     const id = String(order.idTransaction || "").toLowerCase();
     const search = searchTerm.toLowerCase();
     return id.includes(search);
   });
 
-  // Update status pembayaran ke backend
+  // === UPDATE STATUS ===
   const handleStatusChange = async (id, newStatus) => {
     try {
       await axios.patch(
         `http://localhost:8080/api/v1/transactions/${id}`,
         null,
-        { params: { paymentStatus: newStatus } }
+        {
+          params: { paymentStatus: newStatus },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       const updatedOrders = orders.map((order) =>

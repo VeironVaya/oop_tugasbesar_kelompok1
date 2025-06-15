@@ -10,6 +10,7 @@ public class CartItemResponseDto {
     private long idStock;
     private String name;
     private String description;
+    private String urlimage;
     private Double price;
     private String category;
     private int stockQuantity;

@@ -10,4 +10,5 @@ public class ProductRequestDto {
     private String description;
     private double price;
     private String category;
+    private String urlimage;
 }
