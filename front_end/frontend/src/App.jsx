@@ -17,6 +17,7 @@ import Footer from "./components/Footer";
 import Regist from "./pages/Regist";
 import RequireAuth from "./components/RequireAuth";
 import Unauthorized from "./pages/Unauthorized";
+import MyFavorite from "./pages/MyFavorite";
 
 const App = () => {
   return (
@@ -31,15 +32,16 @@ const App = () => {
         <Route path="/regist" element={<Regist />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/product/:productId" element={<Product />} />
+        <Route path="/my-favorites" element={<MyFavorite />} />
 
         {/* --- Rute Terproteksi --- */}
         <Route element={<RequireAuth allowedRoles={["user", "admin"]} />}>
           <Route path="/cart" element={<Cart />} />
           <Route path="/orders" element={<Orders />} />
-          
-          {/* ✅ DIPERBAIKI: Tambahkan '/' dan pindahkan ke dalam blok ini */}
+
+          {/*  DIPERBAIKI: Tambahkan '/' dan pindahkan ke dalam blok ini */}
           <Route path="/checkout/:transactionId" element={<Checkout />} />
-          
+
           {/* Tambahkan rute terproteksi lainnya di sini */}
         </Route>
       </Routes>

@@ -1,17 +1,16 @@
-// === src/pages/MyFavorite.jsx (Tokenized & Compatible) ===
+// === src/pages/MyFavorite.jsx ===
 
 import React from "react";
-import { assets } from "../assets/assets";
 import { useShop } from "../context/ShopContext";
 import { Link } from "react-router-dom";
+import { assets } from "../assets/assets";
 
 const MyFavorite = () => {
-  // Ambil data dan fungsi dari context. 'favoriteItems' sekarang berisi data dari server.
   const { favoriteItems, removeFromFavorites, loading } = useShop();
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-semibold mb-6">My Favorite Items</h1>
+    <div className="max-w-6xl mx-auto px-4 py-10">
+      <h1 className="text-2xl font-bold mb-6">My Favorite Items</h1>
 
       {loading ? (
         <p className="text-gray-500">Loading your favorite items...</p>
@@ -21,33 +20,44 @@ const MyFavorite = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {favoriteItems.map((item) => (
             <div
-              // ✅ Gunakan idProduct yang konsisten sebagai key
               key={item.idProduct}
-              className="border rounded-md p-4 shadow-sm relative bg-white flex flex-col justify-between"
+              className="border rounded-md p-4 shadow hover:shadow-md transition relative bg-white"
             >
               <Link to={`/product/${item.idProduct}`}>
                 <img
-                  src={item.image || "/default.jpg"}
-                  alt={item.name}
-                  className="w-full h-48 object-cover rounded mb-4 cursor-pointer"
+                  src={
+                    item.image && item.image.trim() !== ""
+                      ? item.image
+                      : "https://placehold.co/100x100/e0e0e0/777?text=No+Img"
+                  }
+                  alt={item.name || "Favorite product"}
+                  className="w-full h-48 object-cover rounded mb-3"
+                  onError={(e) => {
+                    if (
+                      e.currentTarget.src !==
+                      "https://placehold.co/100x100/e0e0e0/777?text=No+Img"
+                    ) {
+                      e.currentTarget.src =
+                        "https://placehold.co/100x100/e0e0e0/777?text=No+Img";
+                    }
+                  }}
                 />
-                <h2 className="text-lg font-medium hover:text-blue-600">{item.name}</h2>
+                <h2 className="text-lg font-medium text-black hover:text-blue-600">
+                  {item.name}
+                </h2>
               </Link>
-
-              <div>
-                <p className="text-gray-600">{item.subCategory || item.category}</p>
-                <p className="text-black font-semibold mt-2">
-                  Rp{item.price?.toLocaleString()}
-                </p>
-              </div>
-
+              <p className="text-gray-500 text-sm mt-1">
+                {item.subCategory || item.category}
+              </p>
+              <p className="font-semibold text-black mt-2">
+                Rp{item.price?.toLocaleString()}
+              </p>
               <button
-                // ✅ Panggil removeFromFavorites dengan idProduct
                 onClick={() => removeFromFavorites(item.idProduct)}
-                className="absolute top-2 right-2 p-1.5 bg-white rounded-full hover:bg-gray-100"
+                className="absolute top-2 right-2 p-1.5 bg-white border rounded-full hover:bg-gray-100"
               >
                 <img
-                  src={assets.bin_icon} // Ganti dengan ikon 'X' atau 'un-favorite' jika perlu
+                  src={assets.bin_icon}
                   alt="Remove from favorites"
                   className="w-5 h-5"
                 />

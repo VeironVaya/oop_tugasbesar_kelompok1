@@ -18,7 +18,6 @@ const Collection = () => {
   // State untuk input pencarian
   const [search, setSearch] = useState("");
 
-  // ✅ FUNGSI INI ADALAH KUNCI UTAMA
   // Logikanya: jika kategori yang diklik sama dengan yang sudah aktif, nonaktifkan.
   // Jika berbeda, ganti dengan yang baru. Ini memastikan hanya satu yang bisa aktif.
   const handleCheckbox = (category) => {
@@ -30,9 +29,9 @@ const Collection = () => {
   };
 
   // --- Logika untuk memfilter produk ---
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory 
-      ? product.category.toLowerCase() === selectedCategory.toLowerCase() 
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory = selectedCategory
+      ? product.category.toLowerCase() === selectedCategory.toLowerCase()
       : true; // Jika tidak ada kategori dipilih, loloskan semua
 
     const matchesSearch = search
@@ -52,7 +51,9 @@ const Collection = () => {
         >
           FILTERS
           <img
-            className={`h-3 sm:hidden transition-transform ${showFilter ? "rotate-180" : ""}`}
+            className={`h-3 sm:hidden transition-transform ${
+              showFilter ? "rotate-180" : ""
+            }`}
             src="/dropdown_icon.png" // Ganti dengan path asset Anda
             alt="toggle filter"
           />
@@ -82,8 +83,10 @@ const Collection = () => {
                 />
                 <span
                   style={{
-                    color: selectedCategory === categoryName ? "black" : "#6b7280",
-                    fontWeight: selectedCategory === categoryName ? "600" : "normal",
+                    color:
+                      selectedCategory === categoryName ? "black" : "#6b7280",
+                    fontWeight:
+                      selectedCategory === categoryName ? "600" : "normal",
                   }}
                 >
                   {categoryName}
@@ -127,9 +130,13 @@ const Collection = () => {
                 <ProductItem
                   key={item.idProduct}
                   id={item.idProduct}
-                  image={item.image || "/default.jpg"}
                   name={item.name}
                   price={item.price}
+                  image={
+                    item.urlimage && item.urlimage.trim() !== ""
+                      ? item.urlimage
+                      : "https://placehold.co/100x100/e0e0e0/777?text=No+Img"
+                  }
                 />
               ))
             )}
