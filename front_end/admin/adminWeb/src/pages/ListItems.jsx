@@ -34,14 +34,22 @@ const ListItems = () => {
     }
 
     const fetchProducts = async () => {
+      setIsLoading(true); // Re-enable loading when filter/search changes
       try {
-        const response = await axios.get("http://localhost:8080/api/v1/products", {
+        // Fetch with category filter via API
+        const url =
+          categoryFilter === "All"
+            ? "http://localhost:8080/api/v1/products"
+            : `http://localhost:8080/api/v1/products?category=${encodeURIComponent(categoryFilter)}`;
+
+        const response = await axios.get(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        const productData = response.data.data || response.data;
+        // Backend might return directly the data array, or an object with a 'data' key
+        const productData = response.data.data || response.data; 
         if (Array.isArray(productData)) {
           setProducts(productData);
         } else {
@@ -60,13 +68,11 @@ const ListItems = () => {
     };
 
     fetchProducts();
-  }, [token, navigate]);
+  }, [token, navigate, categoryFilter]); // Add categoryFilter to dependency array
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = (product.name || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === "All" || (product.category || "") === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = products.filter((product) =>
+    (product.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleDeleteClick = (productId) => {
     setProductToDelete(productId);
@@ -103,21 +109,21 @@ const ListItems = () => {
 
   return (
     <>
-      <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 md:p-8 font-sans">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">All Products List</h1>
 
         <div className="mb-4 flex flex-col md:flex-row md:items-center gap-4">
           <input
             type="text"
             placeholder="Search by name..."
-            className="border px-4 py-2 rounded-md w-full md:w-1/2 focus:ring-2 focus:ring-blue-500"
+            className="border px-4 py-2 rounded-md w-full md:w-1/2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="border px-4 py-2 rounded-md w-full md:w-1/4 focus:ring-2 focus:ring-blue-500"
+            className="border px-4 py-2 rounded-md w-full md:w-1/4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
           >
             <option value="All">All Categories</option>
             <option value="Topwear">Topwear</option>
@@ -142,24 +148,27 @@ const ListItems = () => {
               {filteredProducts.map((product) => (
                 <tr key={product.idProduct} className="bg-white border-b hover:bg-gray-50 transition-colors duration-200">
                   <td className="py-4 px-6">
-                    {/* ✅ Updated: Using image URL from API */}
                     <img
                       src={
-                        product.image
-                          ? `http://localhost:8080/api/v1/products/image/${product.image}`
+                        // Use product.urlimage if available, otherwise fallback
+                        product.urlimage 
+                          ? product.urlimage 
                           : "https://placehold.co/100x100/e0e0e0/777?text=No+Img"
                       }
                       alt={product.name || "Product Image"}
                       className="h-14 w-14 object-cover rounded-md"
                       onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "https://placehold.co/100x100/e0e0e0/777?text=No+Img";
+                        e.currentTarget.src = "https://placehold.co/100x100/e0e0e0/777?text=No+Img";
                       }}
                     />
                   </td>
+
                   <td className="py-4 px-6 font-medium text-gray-900">{product.name}</td>
                   <td className="py-4 px-6">{product.category}</td>
-                  <td className="py-4 px-6 font-semibold">${product.price}</td>
+                  <td className="py-4 px-6 font-semibold">
+                    {/* Format price to Indonesian Rupiah */}
+                    Rp.{product.price?.toLocaleString("id-ID")}
+                  </td>
                   <td className="flex items-center justify-center gap-2 py-4 px-6 text-center">
                     <Link
                       to={`/editdetails/${product.idProduct}`}
@@ -210,13 +219,13 @@ const ListItems = () => {
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={closeDeleteModal}
-                className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300"
+                className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors duration-200 ease-in-out"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-200 ease-in-out"
               >
                 Delete
               </button>

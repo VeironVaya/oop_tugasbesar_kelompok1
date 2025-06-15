@@ -14,6 +14,8 @@ const OrderDetail = () => {
 
   useEffect(() => {
     if (!token) {
+      // Use a custom modal or message box instead of alert()
+      // For now, retaining alert() as per the previous pattern, but it's a candidate for improvement.
       alert("Unauthorized: Please log in first.");
       navigate("/login");
       return;
@@ -32,6 +34,7 @@ const OrderDetail = () => {
         setOrder(res.data);
       } catch (error) {
         console.error("Gagal mengambil detail transaksi:", error);
+        // Use a custom modal or message box instead of alert()
         alert("Tidak dapat mengambil data transaksi.");
       } finally {
         setLoading(false);
@@ -41,65 +44,71 @@ const OrderDetail = () => {
     fetchOrderDetail();
   }, [id, navigate, token]);
 
-  if (loading) return <p className="p-6">Memuat data transaksi...</p>;
+  if (loading) return <p className="p-6 text-gray-700">Memuat data transaksi...</p>;
   if (!order)
     return <p className="p-6 text-red-500">Transaksi tidak ditemukan.</p>;
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-4xl mx-auto bg-white shadow-md rounded-lg font-sans">
       <button
         onClick={() => navigate("/orders")}
-        className="mb-4 text-sm text-gray-600 hover:underline"
+        className="mb-4 text-sm text-gray-600 hover:underline flex items-center"
       >
-        ← Kembali ke daftar pesanan
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Kembali ke daftar pesanan
       </button>
 
-      <h2 className="font-semibold mb-2">
+      <h2 className="text-xl font-semibold mb-3 text-gray-800">
         ID Transaksi: {order.idTransaction}
       </h2>
-      <p className="mb-2">
-        Status:
-        <select
-          value={order.paymentStatus}
-          disabled
-          className="border rounded px-2 py-1 ml-2"
-        >
-          <option value="Unpaid">Unpaid</option>
-          <option value="Paid">Paid</option>
-        </select>
+      <p className="mb-2 text-gray-700">
+        <span className="font-semibold">Status Pembayaran:</span>{" "}
+        {order.paymentStatus} {/* Display status as text */}
       </p>
 
-      <p className="mb-4">Tanggal Pesanan: {order.date}</p>
+      <p className="mb-4 text-gray-700">
+        <span className="font-semibold">Tanggal Pesanan:</span>{" "}
+        {order.date}
+      </p>
 
+      <h3 className="text-lg font-semibold mb-3 text-gray-800">Item Transaksi:</h3>
       {order.transactionItems && order.transactionItems.length > 0 ? (
         order.transactionItems.map((item, idx) => {
           const stock = item.stock || {};
+          // Assuming product details are nested under stock or a similar structure within transactionItems
+          const productName = item.product?.name || "N/A"; // Access product name
+          const productImageUrl = item.product?.urlimage || "https://via.placeholder.com/80"; // Access product image URL
+
           return (
             <div
               key={idx}
-              className="flex items-center border p-4 rounded mb-2"
+              className="flex items-center border border-gray-200 p-4 rounded-lg mb-3 bg-gray-50"
             >
               <img
-                src={"https://via.placeholder.com/80"}
-                alt="Produk"
-                className="w-20 h-20 object-cover rounded mr-4"
+                src={productImageUrl}
+                alt={productName}
+                className="w-20 h-20 object-cover rounded-md mr-4 shadow-sm"
+                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/80'; }}
               />
-              <div className="flex-1">
-                <p className="font-semibold">Size: {stock.size || "N/A"}</p>
-                <p>Qty: {item.quantity}</p>
-                <p>Stock Tersisa: {stock.stockQuantity ?? "N/A"}</p>
+              <div className="flex-1 text-gray-700">
+                <p className="font-semibold text-lg">{productName}</p>
+                <p className="text-sm">Ukuran: {stock.size || "N/A"}</p>
+                <p className="text-sm">Jumlah: {item.quantity}</p>
+                <p className="text-sm">Stok Tersisa: {stock.stockQuantity ?? "N/A"}</p>
               </div>
-              <p className="font-medium text-sm text-right">
+              <p className="font-bold text-lg text-right text-gray-900">
                 Subtotal: Rp.{item.totalPrice?.toLocaleString("id-ID")}
               </p>
             </div>
           );
         })
       ) : (
-        <p className="text-gray-500">Tidak ada item dalam transaksi ini.</p>
+        <p className="text-gray-500 italic">Tidak ada item dalam transaksi ini.</p>
       )}
 
-      <p className="mt-4 font-semibold text-lg">
+      <p className="mt-6 font-bold text-xl text-gray-900 border-t pt-4 border-gray-200">
         Total Pembayaran: Rp.{order.totalPrice?.toLocaleString("id-ID")}
       </p>
     </div>
