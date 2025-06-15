@@ -11,8 +11,10 @@ const Navbar = () => {
 
   useEffect(() => {
     if (!token) {
-      alert("Unauthorized: Please log in first.");
-      navigate("/login");
+      // alert("Unauthorized: Please log in first.");
+      setIsLoading(false);
+      setTimeout(() => navigate("/login"), 2000);
+      return;
     }
   }, [navigate, token]);
 

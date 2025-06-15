@@ -1,12 +1,10 @@
-// === src/App.jsx ===
 import React from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 // Import Components
-// CORRECTED PATHS: Assuming standard file names (PascalCase) and adding extensions for clarity.
 import Navbar from "./components/Navbar.jsx";
 import Sidebar from "./components/Sidebar.jsx";
-import PrivateRoute from "./components/PrivateRoute.jsx";
+import ProtectedRoute from "./components/PrivateRoute.jsx"; // This now directly checks localStorage
 
 // Import Pages
 import Login from "./pages/Login.jsx";
@@ -22,82 +20,60 @@ import "./App.css";
 
 function App() {
   const location = useLocation();
-  // Determine if the current page is the login page
+  // Directly check localStorage for authentication status
+  const isAuthenticated = !!localStorage.getItem("token");
   const isLoginPage = location.pathname === "/login";
 
   return (
     <>
-      {/* Conditionally render Navbar and Sidebar so they don't show on the login page */}
+      {/* Conditionally render Navbar and Sidebar */}
       {!isLoginPage && <Navbar />}
       <div className="flex">
         {!isLoginPage && <Sidebar />}
         <div className={`flex-1 ${!isLoginPage ? "ml-0" : ""}`}>
           <Routes>
             {/* PUBLIC ROUTE: Login Page */}
+            {/* This path is always accessible */}
             <Route path="/login" element={<Login />} />
 
-            {/* PROTECTED ROUTES: All admin pages are wrapped in PrivateRoute */}
-            <Route
-              path="/listitems"
-              element={
-                <PrivateRoute>
-                  <Listitems />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/additems"
-              element={
-                <PrivateRoute>
-                  <Add />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/orders"
-              element={
-                <PrivateRoute>
-                  <Order />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/order/:id"
-              element={
-                <PrivateRoute>
-                  <OrderDetail />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/editdetails/:productId"
-              element={
-                <PrivateRoute>
-                  <Editdetails />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/edit/:productId/addstock"
-              element={
-                <PrivateRoute>
-                  <AddStock />
-                </PrivateRoute>
-              }
-            />
+            {/*
+              PROTECTED ROUTES:
+              Use ProtectedRoute as a layout route.
+              All nested routes within this <Route> will be protected.
+              If not authenticated, ProtectedRoute will redirect to /login.
+            */}
+            <Route element={<ProtectedRoute />}>
+              {/* ROOT PATH REDIRECT:
+                  If authenticated and at "/", redirect to "/listitems".
+                  If not authenticated, ProtectedRoute will handle the redirect to /login
+                  before this route is even considered.
+              */}
+              <Route path="/" element={<Navigate to="/listitems" replace />} />
 
-            {/* ROOT PATH REDIRECT: Redirects from "/" to "/listitems" */}
+              {/* Protected Pages */}
+              <Route path="/listitems" element={<Listitems />} />
+              <Route path="/additems" element={<Add />} />
+              <Route path="/orders" element={<Order />} />
+              <Route path="/order/:id" element={<OrderDetail />} />
+              <Route path="/editdetails/:productId" element={<Editdetails />} />
+              <Route path="/edit/:productId/addstock" element={<AddStock />} />
+            </Route>
+
+            {/* CATCH-ALL ROUTE for unknown paths:
+                Redirects any unmatched path.
+                If authenticated, redirect to /listitems.
+                If not authenticated, redirect to /login.
+            */}
             <Route
-              path="/"
+              path="*"
               element={
-                <PrivateRoute>
+                isAuthenticated ? (
                   <Navigate to="/listitems" replace />
-                </PrivateRoute>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
               }
             />
-            
-            {/* CATCH-ALL (Optional): Redirect any other path to the main page */}
-            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </div>

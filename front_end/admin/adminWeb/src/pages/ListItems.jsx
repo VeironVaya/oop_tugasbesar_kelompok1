@@ -162,6 +162,7 @@ const ListItems = () => {
                       }}
                     />
                   </td>
+                  
 
                   <td className="py-4 px-6 font-medium text-gray-900">{product.name}</td>
                   <td className="py-4 px-6">{product.category}</td>

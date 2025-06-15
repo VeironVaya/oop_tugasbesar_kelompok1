@@ -56,15 +56,13 @@ export const ShopProvider = ({ children }) => {
         const mappedItems = res.data.items.map((item) => ({
           idCartItem: item.idCartItem,
           stockId: item.idStock,
-          productId: item.idProduct,
           quantity: item.itemQuantity,
-          size: item.size || "-",
           name: item.name,
           price: item.price,
           description: item.description,
           category: item.category,
           stockQuantity: item.stockQuantity,
-          image: item.image || "/default.jpg",
+          image: item.urlimage || "/default.jpg", // ✅ inilah perbaikannya
         }));
         setCartItems(mappedItems);
       }
@@ -120,17 +118,46 @@ export const ShopProvider = ({ children }) => {
   };
 
   const handleCheckout = async () => {
-    if (!user?.id) throw new Error("Pengguna belum login.");
-    if (cartItems.length === 0) throw new Error("Keranjang kosong.");
-    try {
-      const response = await api.post(`/customers/${user.id}/checkout`);
-      await fetchCart();
-      return response.data;
-    } catch (error) {
-      console.error("Gagal melakukan checkout:", error);
-      throw error;
-    }
-  };
+  if (!user?.id) throw new Error("Pengguna belum login.");
+  if (cartItems.length === 0) throw new Error("Keranjang kosong.");
+
+  try {
+    const response = await api.post(`/customers/${user.id}/checkout`);
+
+    // ✅ Ambil data dari respons
+    const data = response.data;
+
+    // ✅ Mapping hasil checkout
+    const mappedCheckout = {
+      idTransaction: data.idTransaction,
+      customerId: data.idCustomer,
+      date: data.date,
+      totalPrice: data.totalPrice,
+      paymentStatus: data.paymentStatus,
+      items: data.transactionItems.map((item) => ({
+        id: item.idCartItemTemp,
+        name: item.name,
+        image: item.urlimage,
+        description: item.description,
+        category: item.category,
+        size: item.size,
+        totalPrice: item.totalPrice,
+        quantity: item.quantity,
+      })),
+    };
+
+    // ✅ Simpan ke context (jika kamu pakai setCheckoutData)
+    setCheckoutData((prev) => [...prev, mappedCheckout]);
+
+    await fetchCart(); // kosongkan cart
+
+    return mappedCheckout;
+  } catch (error) {
+    console.error("Gagal melakukan checkout:", error);
+    throw error;
+  }
+};
+
 
   const cancelOrder = async (transactionId) => {
     if (!user?.id || !transactionId)
@@ -190,11 +217,22 @@ export const ShopProvider = ({ children }) => {
     try {
       const res = await api.get(`/products/customer/${user.id}/favorites`);
 
-      // ✅ Ambil hanya bagian product dari favorites
+      // ✅ Mapping product menjadi object dengan key "image"
       if (res.data?.favorites && Array.isArray(res.data.favorites)) {
-        const favoriteProducts = res.data.favorites.map((fav) => fav.product);
+        const favoriteProducts = res.data.favorites.map((fav) => {
+          const product = fav.product;
+          return {
+            idProduct: product.idProduct,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            category: product.category,
+            subCategory: product.subCategory || null,
+            image: product.urlimage || null, // ✅ inilah kuncinya
+          };
+        });
         setFavoriteItems(favoriteProducts);
-        console.log("✅ Favorites:", favoriteProducts);
+        console.log("✅ Favorites (mapped):", favoriteProducts);
       } else {
         setFavoriteItems([]);
       }

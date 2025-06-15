@@ -5,21 +5,59 @@ import axios from "axios";
 const EditDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const token = localStorage.getItem("token"); // Get token
-  console.log("Token:", token); // Log token for debugging
+  const token = localStorage.getItem("token");
+  console.log("Token:", token);
 
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [productImageUrl, setProductImageUrl] = useState(""); // New state for image URL
+  const [productImageUrl, setProductImageUrl] = useState(""); // State for image URL, will be set by Cloudinary
+
+  // Cloudinary Configuration (SESUAIKAN DENGAN PUNYA ANDA)
+  const cloudinaryCloudName = "dim14penk"; // Ganti dengan Cloud Name Cloudinary Anda
+  const cloudinaryUploadPreset = "assetPBO"; // Ganti dengan unsigned upload preset Anda
+
+  // --- Cloudinary Upload Handler ---
+  const openCloudinaryWidget = () => {
+    if (window.cloudinary) {
+      const widget = window.cloudinary.createUploadWidget(
+        {
+          cloudName: cloudinaryCloudName,
+          uploadPreset: cloudinaryUploadPreset,
+          sources: ["local", "url", "camera", "google_drive"], // Sesuaikan sumber yang diizinkan
+          folder: "product_images", // Opsional: tentukan folder di Cloudinary
+          // Anda bisa menambahkan opsi lain di sini, seperti transformasi, tags
+        },
+        (error, result) => {
+          if (!error && result && result.event === "success") {
+            console.log(
+              "Done uploading!!! Here is the image info: ",
+              result.info
+            );
+            setProductImageUrl(result.info.secure_url); // Set URL dari Cloudinary
+            alert("Image uploaded!");
+          } else if (error) {
+            console.error("Cloudinary upload error:", error);
+            alert("Image upload failed. Please try again.");
+          }
+        }
+      );
+      widget.open(); // Buka widget
+    } else {
+      alert(
+        "Script widget Cloudinary belum dimuat. Periksa file index.html Anda."
+      );
+    }
+  };
 
   useEffect(() => {
-    // Check for token first, handle unauthorized access
+    // *** PERBAIKAN: Tangani autentikasi di sini, tanpa setTimeout dan alert di awal rendering ***
     if (!token) {
-      setError("Unauthorized. Please log in to edit product details.");
-      setIsLoading(false);
-      setTimeout(() => navigate("/login"), 2000);
-      return;
+      // Jika tidak ada token, langsung redirect ke login.
+      // ProtectedRoute di App.jsx seharusnya sudah menangani ini,
+      // tetapi ini adalah fallback yang baik untuk komponen individual.
+      navigate("/login");
+      return; // Hentikan eksekusi useEffect ini
     }
 
     const fetchProductById = async () => {
@@ -38,26 +76,25 @@ const EditDetails = () => {
           productData.stocks = [];
         }
 
-        // Ensure category is never empty and set default if needed
         if (!productData.category || productData.category.trim() === "") {
-          productData.category = "TopWear"; // Set a default category
+          productData.category = "TopWear";
         }
 
-        // Set the image URL state from fetched data (prioritize urlimage based on previous discussion)
+        // Set the image URL state from fetched data (prioritize urlimage)
         setProductImageUrl(productData.urlimage || productData.imageUrl || "");
 
-        console.log("Fetched product data:", productData); // Debug log
+        console.log("Fetched product data:", productData);
         setProduct(productData);
       } catch (err) {
         console.error("Error fetching product:", err);
-        // Similar error handling as AddStock component
+        // Error handling untuk 401 dari API call
         if (err.response && err.response.status === 401) {
-          setError("Your session has expired. Please log in again.");
+          setError("Your session has ended. Please log in again.");
           localStorage.removeItem("token");
-          setTimeout(() => navigate("/login"), 2000);
+          navigate("/login"); // Redirect langsung tanpa setTimeout
         } else {
           setError(
-            "Failed to fetch product details. The product may not exist or an error occurred."
+            "Failed to retrieve product details. The product may not exist or an error occurred."
           );
         }
       } finally {
@@ -71,35 +108,35 @@ const EditDetails = () => {
       setError("No product ID was provided in the URL.");
       setIsLoading(false);
     }
-  }, [productId, token, navigate]); // Add navigate to dependencies
+  }, [productId, token, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(`Input changed - ${name}:`, value); // Debug log
+    console.log(`Input changed - ${name}:`, value);
 
-    if (name === "imageUrl") { // Handle the new image URL input separately
-      setProductImageUrl(value);
-    } else {
-      setProduct((prevProduct) => ({
-        ...prevProduct,
-        [name]: value,
-      }));
-    }
+    // Sekarang, 'productImageUrl' tidak lagi diubah oleh input langsung,
+    // tetapi oleh Cloudinary widget. Jadi, tidak perlu ada penanganan khusus di sini
+    // kecuali Anda tetap ingin input teks manual sebagai fallback/opsi tambahan.
+    // Jika hanya Cloudinary, Anda bisa menghapus `if (name === "imageUrl")`.
+    setProduct((prevProduct) => ({
+      ...prevProduct,
+      [name]: value,
+    }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     if (!product) {
-      alert("Product data not loaded"); // Using alert, as per previous pattern. Consider a modal.
+      alert("Product data hasn't loaded yet.");
       return;
     }
 
-    // Comprehensive validation
     const requiredFields = {
       name: product.name,
       description: product.description,
       price: product.price,
-      category: product.category, // Use product.category directly for validation
+      category: product.category,
+      // imageUrl: productImageUrl, // Tambahkan ini jika Anda ingin mewajibkan gambar di update
     };
 
     const missingFields = Object.keys(requiredFields).filter((field) => {
@@ -108,48 +145,44 @@ const EditDetails = () => {
       return isEmpty;
     });
 
+    // Validasi gambar: Jika belum ada imageUrl dan tidak ada yang diupload, beri peringatan
+    if (!productImageUrl && !product.urlimage && !product.imageUrl) {
+      alert("Image must be uploaded.");
+      return;
+    }
+
     if (missingFields.length > 0) {
-      const message = `Please fill in the following required fields: ${missingFields.join(
-        ", "
-      )}.`;
+      const message = `This field must not empty: ${missingFields.join(", ")}.`;
       alert(message);
       return;
     }
 
-    // Validate price and ensure it's a number > 0
     const numericPrice = parseFloat(product.price);
     if (isNaN(numericPrice) || numericPrice <= 0) {
-      alert("Product Price must be a number greater than 0.");
+      alert("Price must be grater than 0.");
       return;
     }
 
-    // Create update data with the correct backend field names
     const updatedData = {
       name: (product.name || "").toString().trim(),
       description: (product.description || "").toString().trim(),
       price: numericPrice,
       category: (product.category || "").toString().trim(),
-      urlimage: (productImageUrl || "").toString().trim(), // Use productImageUrl and backend's expected field name 'urlimage'
+      urlimage: (productImageUrl || "").toString().trim(), // Menggunakan productImageUrl yang di-set dari Cloudinary
     };
 
-    // Remove any undefined or empty string values that are not part of the backend schema
     Object.keys(updatedData).forEach((key) => {
       if (updatedData[key] === undefined || updatedData[key] === null) {
         delete updatedData[key];
       }
     });
 
-    // Final safety check for category
     if (!updatedData.category || updatedData.category === "") {
-      alert(
-        "CRITICAL: Category is still empty after processing. Please refresh and try again."
-      );
+      alert("KRITIS: Category still empty. Please refresh the page.");
       return;
     }
 
     try {
-      // PATCH request to update product details.
-      // Assuming the correct API endpoint for updating product details is /api/v1/products/{productId}
       const response = await axios.patch(
         `http://localhost:8080/api/v1/products/${productId}`,
         updatedData,
@@ -163,7 +196,7 @@ const EditDetails = () => {
       );
 
       console.log("Update successful:", response.data);
-      alert("Product updated successfully!");
+      alert("Produk berhasil diperbarui!");
       navigate("/listitems");
     } catch (err) {
       console.error("=== ERROR DETAILS ===");
@@ -186,15 +219,24 @@ const EditDetails = () => {
       console.error("Error headers:", err.response?.headers);
       console.error("=== ERROR DETAILS END ===");
 
-      let errorMessage = "Failed to update product. Please try again.";
+      let errorMessage = "Gagal memperbarui produk. Silakan coba lagi.";
+      // Error handling untuk 401
+      if (err.response && err.response.status === 401) {
+        errorMessage = "Sesi Anda telah berakhir. Mohon login kembali.";
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
+      // Error handling umum lainnya
       if (err.response) {
         const serverMessage =
           err.response.data.message || JSON.stringify(err.response.data);
-        errorMessage = `Update failed. Server says: ${serverMessage} (Status: ${err.response.status})`;
+        errorMessage = `Pembaruan gagal. Server mengatakan: ${serverMessage} (Status: ${err.response.status})`;
       } else if (err.request) {
-        errorMessage = "Update failed. No response from the server. Is it running?";
+        errorMessage =
+          "Pembaruan gagal. Tidak ada respons dari server. Apakah server berjalan?";
       } else {
-        errorMessage = `Update failed. Error: ${err.message}`;
+        errorMessage = `Pembaruan gagal. Error: ${err.message}`;
       }
       alert(errorMessage);
     }
@@ -203,7 +245,7 @@ const EditDetails = () => {
   if (isLoading) {
     return (
       <div className="text-center p-10 font-semibold text-gray-500">
-        Loading product details...
+        Load detail product...
       </div>
     );
   }
@@ -215,12 +257,14 @@ const EditDetails = () => {
   if (!product) {
     return (
       <div className="text-center p-10 bg-white rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-red-600">Product Not Found</h2>
+        <h2 className="text-2xl font-bold text-red-600">
+          Produk Tidak Ditemukan
+        </h2>
         <Link
           to="/"
           className="mt-6 inline-block bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
         >
-          Back to Product List
+          Back to list items
         </Link>
       </div>
     );
@@ -246,21 +290,40 @@ const EditDetails = () => {
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Back to product list
+        Back to list items
       </Link>
 
       <form onSubmit={handleSave}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-1">
             <img
-              src={productImageUrl || "https://placehold.co/400x400/e0e0e0/777?text=No+Image"} // Use productImageUrl state for display
+              src={
+                productImageUrl ||
+                "https://placehold.co/400x400/e0e0e0/777?text=No+Image"
+              } // Menggunakan productImageUrl state untuk tampilan
               alt={product.name}
               className="w-full h-auto object-cover rounded-lg shadow-md"
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = "https://placehold.co/400x400/e0e0e0/777?text=No+Image";
+                e.target.src =
+                  "https://placehold.co/400x400/e0e0e0/777?text=No+Image";
               }}
             />
+            {/* Tombol untuk membuka widget Cloudinary */}
+            <div className="mt-4">
+              <button
+                type="button" // Penting: type="button" untuk mencegah submit form
+                onClick={openCloudinaryWidget}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Change Image
+              </button>
+              {productImageUrl && (
+                <p className="text-xs text-gray-500 mt-2 break-all">
+                  URL Baru: {productImageUrl.substring(0, 50)}...
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="md:col-span-2 space-y-6">
@@ -306,7 +369,7 @@ const EditDetails = () => {
                 Price
               </label>
               <input
-                type="number" // Using type="number" here is fine for direct numerical input
+                type="number"
                 id="price"
                 name="price"
                 value={product.price || ""}
@@ -335,7 +398,7 @@ const EditDetails = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                 required
               >
-                <option value="">Select a category</option>
+                <option value="">Select Category</option>
                 <option value="BottomWear">BottomWear</option>
                 <option value="FootWear">FootWear</option>
                 <option value="TopWear">TopWear</option>
@@ -344,40 +407,21 @@ const EditDetails = () => {
               <p className="text-xs text-gray-500 mt-1">
                 Current category:{" "}
                 <span className="font-semibold">
-                  {product.category || "None selected"}
+                  {product.category || "Belum dipilih"}
                 </span>
                 {!product.category && (
-                  <span className="text-red-500 ml-2">⚠ Required!</span>
+                  <span className="text-red-500 ml-2">⚠ Wajib!</span>
                 )}
               </p>
             </div>
-            {/* New Input for Image URL */}
-            <div>
-              <label
-                htmlFor="imageUrl"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Product Image URL
-              </label>
-              <input
-                type="url" // Use type="url" for better browser validation hints
-                id="imageUrl"
-                name="imageUrl" // This name will be caught by handleInputChange
-                value={productImageUrl}
-                onChange={handleInputChange}
-                placeholder="Enter direct image URL (e.g., from ImgBB)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                If updating image, paste a new direct image URL here.
-              </p>
-            </div>
+            {/* Input untuk Image URL yang sudah dihapus dan diganti dengan tombol upload */}
+            {/* Bagian ini tidak lagi diperlukan karena digantikan oleh Cloudinary widget */}
           </div>
         </div>
 
         <div className="mt-10 pt-6 border-t border-gray-200">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Current Stock</h3>
+            <h3 className="text-lg font-medium text-gray-900">Stock</h3>
             <Link
               to={`/edit/${productId}/addstock`}
               className="text-blue-600 hover:text-blue-800 hover:underline font-semibold"
@@ -397,14 +441,16 @@ const EditDetails = () => {
                     <span className="text-gray-900">{stock.size || "N/A"}</span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700">Quantity: </span>
+                    <span className="font-medium text-gray-700">
+                      Quantity:{" "}
+                    </span>
                     <span className="text-gray-900">{stock.stockQuantity}</span>
                   </div>
                 </div>
               ))
             ) : (
               <p className="text-sm text-gray-500">
-                No stock information available for this product.
+                This Product don't have any details.
               </p>
             )}
           </div>
