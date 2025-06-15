@@ -92,6 +92,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/customers/**").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/*/customer/*/favorites").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/*/customer/*/favorites").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "api/v1/products/customer/{customerId}/favorites").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/*/customer/*").hasRole("CUSTOMER")
 
                         // Admin Endpoints:
