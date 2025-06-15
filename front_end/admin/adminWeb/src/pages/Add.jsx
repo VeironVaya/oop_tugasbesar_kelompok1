@@ -11,40 +11,32 @@ const Add = () => {
   const [productPrice, setProductPrice] = useState("");
   const [size, setSize] = useState("");
   const [stockQuantity, setStockQuantity] = useState("");
+  const [imageUrl, setImageUrl] = useState(""); // 🆕 Added image URL
 
-  // MODIFIED: Handler to allow only numeric digits for quantity
   const handleQuantityChange = (e) => {
-    const value = e.target.value;
-    // Replace any character that is not a digit (0-9)
-    const sanitizedValue = value.replace(/[^0-9]/g, "");
-    setStockQuantity(sanitizedValue);
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    setStockQuantity(value);
   };
 
-  // MODIFIED: Handler to allow only numbers and a single decimal point for price
   const handlePriceChange = (e) => {
-    const value = e.target.value;
-    // First, remove any character that is not a digit or a dot
-    let sanitizedValue = value.replace(/[^0-9.]/g, "");
-
-    // Then, ensure there is at most one decimal point
-    const parts = sanitizedValue.split(".");
+    let value = e.target.value.replace(/[^0-9.]/g, "");
+    const parts = value.split(".");
     if (parts.length > 2) {
-      // If there are multiple dots, reconstruct the string with only the first one
-      sanitizedValue = parts[0] + "." + parts.slice(1).join("");
+      value = parts[0] + "." + parts.slice(1).join("");
     }
-    setProductPrice(sanitizedValue);
+    setProductPrice(value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // --- VALIDATION LOGIC (Kept as a final safeguard) ---
     if (
       !productName.trim() ||
       !productDescription.trim() ||
       !productPrice ||
       !size.trim() ||
-      !stockQuantity
+      !stockQuantity ||
+      !imageUrl.trim()
     ) {
       alert("Please fill out all fields.");
       return;
@@ -62,7 +54,6 @@ const Add = () => {
       alert("Stock quantity must be a number greater than 0.");
       return;
     }
-    // --- END VALIDATION ---
 
     const payload = {
       name: productName,
@@ -71,14 +62,18 @@ const Add = () => {
       category: productCategory,
       size: size.trim(),
       stockQuantity: numericStockQuantity,
+      imageUrl: imageUrl.trim(), // 🆕 Include image URL in payload
     };
 
+    const token = localStorage.getItem("token");
     const apiUrl = "http://localhost:8080/api/v1/products";
-    console.log("Submitting to URL:", apiUrl);
-    console.log("Payload:", payload);
 
     try {
-      await axios.post(apiUrl, payload);
+      await axios.post(apiUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`, // 🛡️ Use token for auth
+        },
+      });
       alert("Product has been added successfully!");
       navigate("/listitems");
     } catch (error) {
@@ -99,6 +94,21 @@ const Add = () => {
         onSubmit={handleSubmit}
         className="w-full max-w-4xl bg-white p-10 rounded-lg shadow-md"
       >
+        {/* 🆕 Image URL */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Image URL
+          </label>
+          <input
+            type="text"
+            placeholder="https://example.com/image.jpg"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-black"
+            required
+          />
+        </div>
+
         {/* Product Name */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -150,11 +160,11 @@ const Add = () => {
               Product Price
             </label>
             <input
-              type="text" // Use text to allow custom filtering, but provide number patterns
-              inputMode="decimal" // Hint for mobile keyboards
+              type="text"
+              inputMode="decimal"
               placeholder="Price must be > 0"
               value={productPrice}
-              onChange={handlePriceChange} // Use the new handler
+              onChange={handlePriceChange}
               className="w-full border border-gray-300 rounded-md px-3 py-2"
               required
             />
@@ -189,10 +199,10 @@ const Add = () => {
             </label>
             <input
               id="stockQuantityInput"
-              type="text" // Use text to allow custom filtering
-              inputMode="numeric" // Hint for mobile keyboards
+              type="text"
+              inputMode="numeric"
               value={stockQuantity}
-              onChange={handleQuantityChange} // Use the new handler
+              onChange={handleQuantityChange}
               placeholder="Quantity must be > 0"
               className="w-full border-gray-300 border rounded-md px-3 py-2 focus:ring-2 focus:ring-black"
               required

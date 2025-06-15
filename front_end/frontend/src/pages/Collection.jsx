@@ -1,89 +1,92 @@
+// === src/pages/Collection.jsx (Dengan Filter Kategori) ===
+
 import React, { useState } from "react";
 import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
 import { useShop } from "../context/ShopContext";
 
-const CATEGORY_MAP = {
-  Topwear: "TopWare",
-  Bottomwear: "BottomWare",
-  Footwear: "Footwear",
-  Accessories: "accessories",
-};
-
+// Definisikan kategori dan mapping jika nama di API berbeda
 const categoryList = ["Topwear", "Bottomwear", "Footwear", "Accessories"];
 
 const Collection = () => {
   const { products, loading, error } = useShop();
+
+  // State untuk menyimpan kategori yang sedang dipilih
   const [selectedCategory, setSelectedCategory] = useState("");
+  // State untuk mengontrol tampilan filter di mode mobile
   const [showFilter, setShowFilter] = useState(false);
+  // State untuk input pencarian
   const [search, setSearch] = useState("");
 
-  // FILTER PRODUK
-  let filterProducts = products;
-  if (selectedCategory) {
-    filterProducts = filterProducts.filter(
-      (item) =>
-        item.category &&
-        item.category.toLowerCase() ===
-          (CATEGORY_MAP[selectedCategory] || selectedCategory).toLowerCase()
-    );
-  }
-  if (search) {
-    filterProducts = filterProducts.filter((item) =>
-      item.name?.toLowerCase().includes(search.toLowerCase())
-    );
-  }
-
-  // Checkbox seperti radio: hanya satu bisa aktif
-  const handleCheckbox = (cat) => {
-    setSelectedCategory(selectedCategory === cat ? "" : cat);
+  // ✅ FUNGSI INI ADALAH KUNCI UTAMA
+  // Logikanya: jika kategori yang diklik sama dengan yang sudah aktif, nonaktifkan.
+  // Jika berbeda, ganti dengan yang baru. Ini memastikan hanya satu yang bisa aktif.
+  const handleCheckbox = (category) => {
+    if (selectedCategory === category) {
+      setSelectedCategory(""); // Batalkan pilihan jika diklik lagi
+    } else {
+      setSelectedCategory(category); // Pilih kategori baru
+    }
   };
+
+  // --- Logika untuk memfilter produk ---
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory 
+      ? product.category.toLowerCase() === selectedCategory.toLowerCase() 
+      : true; // Jika tidak ada kategori dipilih, loloskan semua
+
+    const matchesSearch = search
+      ? product.name.toLowerCase().includes(search.toLowerCase())
+      : true; // Jika tidak ada pencarian, loloskan semua
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
-      {/* Filter Options */}
+      {/* --- BAGIAN FILTER (SISI KIRI) --- */}
       <div className="min-w-60">
         <p
           onClick={() => setShowFilter(!showFilter)}
-          className="my-2 text-xl flex items-center cursor-pointer gap-2"
+          className="my-2 text-xl flex items-center justify-between cursor-pointer sm:cursor-default"
         >
           FILTERS
           <img
-            className={`h-3 sm:hidden ${showFilter ? " rotate-90" : ""}`}
-            src="/dropdown_icon.png" // Ganti dengan path asset dropdown-icon kamu
-            alt=""
+            className={`h-3 sm:hidden transition-transform ${showFilter ? "rotate-180" : ""}`}
+            src="/dropdown_icon.png" // Ganti dengan path asset Anda
+            alt="toggle filter"
           />
         </p>
 
-        {/* Category Filter */}
+        {/* Kotak Filter Kategori */}
         <div
           className={`border border-gray-300 pl-5 py-3 mt-6 ${
-            showFilter ? "" : "hidden"
+            showFilter ? "block" : "hidden"
           } sm:block`}
         >
           <p className="mb-3 text-sm font-medium">TYPE</p>
-          <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {categoryList.map((cat) => (
+          <div className="flex flex-col gap-2 text-sm text-gray-700">
+            {categoryList.map((categoryName) => (
               <label
                 className="flex items-center gap-2 cursor-pointer"
-                key={cat}
+                key={categoryName}
               >
                 <input
                   className="w-4 h-4"
                   type="checkbox"
-                  checked={selectedCategory === cat}
-                  onChange={() => handleCheckbox(cat)}
-                  style={{
-                    accentColor: selectedCategory === cat ? "#1a1a1a" : "#bdbdbd",
-                  }}
+                  // 'checked' akan true hanya jika state cocok dengan nama kategori ini
+                  checked={selectedCategory === categoryName}
+                  // 'onChange' memanggil handler kita
+                  onChange={() => handleCheckbox(categoryName)}
+                  style={{ accentColor: "black" }}
                 />
                 <span
                   style={{
-                    color: selectedCategory === cat ? "#1a1a1a" : "#bdbdbd",
-                    fontWeight: selectedCategory === cat ? "bold" : "normal",
+                    color: selectedCategory === categoryName ? "black" : "#6b7280",
+                    fontWeight: selectedCategory === categoryName ? "600" : "normal",
                   }}
                 >
-                  {cat}
+                  {categoryName}
                 </span>
               </label>
             ))}
@@ -91,45 +94,40 @@ const Collection = () => {
         </div>
       </div>
 
-      {/* Right Side */}
+      {/* --- BAGIAN PRODUK (SISI KANAN) --- */}
       <div className="flex-1">
         <div className="text-base sm:text-2xl mb-4">
           <Title text1={"ALL"} text2={"COLLECTIONS"} />
         </div>
 
-        {/* Pencarian */}
+        {/* Input Pencarian */}
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="Search products by name..."
             className="border px-3 py-2 rounded w-full max-w-xs"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
+        {/* Tampilan Grid Produk */}
         {loading ? (
           <p>Loading products...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
-            {filterProducts.length === 0 ? (
+            {filteredProducts.length === 0 ? (
               <p className="text-gray-500 col-span-full">
                 Produk tidak ditemukan.
               </p>
             ) : (
-              filterProducts.map((item) => (
+              filteredProducts.map((item) => (
                 <ProductItem
-                  key={item.id_product || item._id}
-                  id={item.id_product || item._id}
-                  image={
-                    item.image && item.image.length > 0
-                      ? Array.isArray(item.image)
-                        ? item.image
-                        : [item.image]
-                      : ["/default.jpg"] // fallback default image jika benar-benar kosong
-                  }
+                  key={item.idProduct}
+                  id={item.idProduct}
+                  image={item.image || "/default.jpg"}
                   name={item.name}
                   price={item.price}
                 />

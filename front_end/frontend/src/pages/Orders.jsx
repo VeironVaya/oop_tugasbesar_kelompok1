@@ -1,69 +1,93 @@
-import { useContext, useState } from "react";
-import { ShopContext } from "../context/ShopContext";
-import { useNavigate } from "react-router-dom";
+// === src/pages/Orders.jsx (Tampilan Disesuaikan) ===
+
+import React, { useState, useEffect } from "react";
+import { useShop } from "../context/ShopContext";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../api/axiosConfig";
 
 const Orders = () => {
-  const { checkoutData, products } = useContext(ShopContext);
+  const { user, cancelOrder } = useShop(); 
   const navigate = useNavigate();
-  const [orders, setOrders] = useState(checkoutData);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCancel = (id) => {
-    const confirm = window.confirm("Yakin ingin membatalkan pesanan ini?");
-    if (!confirm) return;
+  // useEffect untuk mengambil riwayat transaksi (tidak berubah)
+  useEffect(() => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    const fetchTransactions = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get(`/customers/${user.id}/transactions`);
+        setOrders(response.data || []);
+      } catch (error) {
+        console.error("Gagal memuat riwayat transaksi:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTransactions();
+  }, [user]);
 
-    const updatedOrders = orders.filter((item) => item._id !== id);
-    setOrders(updatedOrders);
-    alert("Pesanan berhasil dibatalkan.");
+  // handleCancelClick tidak berubah
+  const handleCancelClick = async (transactionId) => {
+    if (window.confirm("Yakin ingin membatalkan pesanan ini? Aksi ini tidak bisa diurungkan.")) {
+      try {
+        await cancelOrder(transactionId);
+        setOrders(prevOrders => prevOrders.filter(order => order.idTransaction !== transactionId));
+        alert("Pesanan berhasil dibatalkan.");
+      } catch (error) {
+        alert("Gagal membatalkan pesanan. Silakan coba lagi.");
+      }
+    }
   };
 
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-6 border-b pb-2">MY ORDERS</h2>
 
-      {orders.length === 0 ? (
-        <p className="text-gray-600">Tidak ada pesanan.</p>
+      {loading ? (
+        <p>Memuat pesanan...</p>
+      ) : orders.length === 0 ? (
+        <p className="text-gray-600">Anda belum memiliki pesanan.</p>
       ) : (
-        orders.map((order, idx) => {
-          const product = products.find((p) => p._id === order._id);
-          if (!product) return null;
+        orders.map((order) => (
+          <div key={order.idTransaction} className="border-b py-4 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <img src={order.productImage || "/default.jpg"} alt={order.productName} className="w-20 h-24 object-cover rounded" />
+              <div>
+                <p className="font-semibold">{order.productName}</p>
+                <p className="text-sm text-gray-600">ID: {order.idTransaction}</p>
+                
+                {/* ✅ UBAH BAGIAN INI: Tampilkan tanggal, bukan kuantitas & ukuran */}
+                <p className="text-sm text-gray-600">
+                  Date: {new Date(order.date).toLocaleDateString("id-ID")}
+                </p>
 
-          return (
-            <div
-              key={idx}
-              className="border-b py-4 flex justify-between items-center"
-            >
-              <div className="flex items-center gap-4">
-                <img
-                  src={product.image[0]}
-                  alt={product.name}
-                  className="w-20 h-24 object-cover rounded"
-                />
-                <div>
-                  <p
-                    onClick={() => navigate(`/checkout/${order._id}`)}
-                    className="font-semibold text-blue-600 hover:underline cursor-pointer"
-                  >
-                    {product.name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Quantity: {order.quantity} &nbsp; Size: {order.size}
-                  </p>
-                </div>
+                <Link to={`/checkout/${order.idTransaction}`} className="text-sm text-blue-600 hover:underline mt-1 inline-block">
+                  See Order Details
+                </Link>
               </div>
+            </div>
 
-              <div className="text-right">
-                <p className="font-semibold text-red-600 mb-2">Unpaid</p>
-
+            <div className="text-right">
+              <p className={`font-semibold mb-2 ${order.paymentStatus === 'PAID' ? 'text-green-600' : 'text-red-600'}`}>
+                {order.paymentStatus}
+              </p>
+              
+              {order.paymentStatus === 'UNPAID' && (
                 <button
-                  onClick={() => handleCancel(order._id)}
-                  className="text-red-600 border border-red-600 px-3 py-1 rounded hover:bg-red-600 hover:text-white"
+                  onClick={() => handleCancelClick(order.idTransaction)}
+                  className="text-red-600 border border-red-600 px-3 py-1 rounded hover:bg-red-600 hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
-              </div>
+              )}
             </div>
-          );
-        })
+          </div>
+        ))
       )}
     </div>
   );

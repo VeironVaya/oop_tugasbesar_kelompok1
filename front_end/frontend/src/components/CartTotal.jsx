@@ -3,7 +3,8 @@ import Title from "./Title";
 import { useShop } from "../context/ShopContext";
 
 const CartTotal = () => {
-  const { currency, getCartAmount } = useShop();
+  const { currency="Rp", getCartAmount } = useShop();
+  const total = getCartAmount();
   return (
     <div className="w-full">
       <div className="text-2xl">

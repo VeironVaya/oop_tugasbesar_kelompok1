@@ -8,12 +8,26 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Ambil data detail transaksi dari API
+  // === GET TOKEN ===
+  const token = localStorage.getItem("token");
+  console.log("Token for OrderDetail page:", token);
+
   useEffect(() => {
+    if (!token) {
+      alert("Unauthorized: Please log in first.");
+      navigate("/login");
+      return;
+    }
+
     const fetchOrderDetail = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:8080/api/v1/transactions/${id}`
+          `http://localhost:8080/api/v1/transactions/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setOrder(res.data);
       } catch (error) {
@@ -25,7 +39,7 @@ const OrderDetail = () => {
     };
 
     fetchOrderDetail();
-  }, [id]);
+  }, [id, navigate, token]);
 
   if (loading) return <p className="p-6">Memuat data transaksi...</p>;
   if (!order)
