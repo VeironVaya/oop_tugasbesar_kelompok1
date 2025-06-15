@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,6 +19,7 @@ import com.example.springboot.dto.request.ProductRequestDto;
 import com.example.springboot.dto.request.ProductWithStockRequestDto;
 import com.example.springboot.dto.request.StockRequestDto;
 import com.example.springboot.dto.response.AddRemoveFavoriteResponseDto;
+import com.example.springboot.dto.response.CustomerFavoritesResponseDto;
 import com.example.springboot.dto.response.ProductResponseDto;
 import com.example.springboot.dto.response.ProductWithCustomerResponseDto;
 import com.example.springboot.dto.response.ProductWithStockResponseDto;
@@ -46,6 +48,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> postProductWithStock(
             @RequestBody ProductWithStockRequestDto dto) {
         try {
@@ -75,6 +78,7 @@ public class ProductController {
     }
 
     @PostMapping("/{productId}/stocks")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> postStockToProduct(
             @PathVariable Long productId,
             @RequestBody StockRequestDto dto) {
@@ -111,6 +115,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{idProduct}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable("idProduct") Long idProduct) {
         try {
             productService.deleteProduct(idProduct);
@@ -137,6 +142,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{idProduct}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> patchProduct(
             @PathVariable("idProduct") Long id,
             @RequestBody ProductRequestDto dto) {
@@ -162,6 +168,7 @@ public class ProductController {
 
     // another
     @GetMapping("/{id_product}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getProductDetail(@PathVariable("id_product") long id) {
 
         try {
@@ -185,6 +192,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id_product}/customer/{id_customer}")
+    @PreAuthorize("authentication.principal.idCustomer == #customerId")
     public ResponseEntity<ProductWithCustomerResponseDto> getProductDetailWstatus(
             @PathVariable("id_product") Long productId,
             @PathVariable("id_customer") Long customerId) {
@@ -219,6 +227,7 @@ public class ProductController {
     }
 
     @PostMapping("/{productId}/customer/{customerId}/favorites")
+    @PreAuthorize("authentication.principal.idCustomer == #customerId")
     public ResponseEntity<AddRemoveFavoriteResponseDto> postFavorite(
             @PathVariable Long productId,
             @PathVariable Long customerId) {
@@ -237,6 +246,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}/customer/{customerId}/favorites")
+    @PreAuthorize("authentication.principal.idCustomer == #customerId")
     public ResponseEntity<AddRemoveFavoriteResponseDto> deleteFavorite(
             @PathVariable Long productId,
             @PathVariable Long customerId) {
@@ -256,4 +266,10 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/customer/{customerId}/favorites")
+    @PreAuthorize("authentication.principal.idCustomer == #customerId")
+    public ResponseEntity<CustomerFavoritesResponseDto> getAllFavoriteProducts(@PathVariable Long customerId) {
+        CustomerFavoritesResponseDto favorites = favoriteProductService.getAllFavoritesByCustomer(customerId);
+        return ResponseEntity.ok(favorites);
+    }
 }

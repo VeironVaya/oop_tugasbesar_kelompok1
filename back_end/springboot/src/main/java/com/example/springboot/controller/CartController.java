@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,6 +31,7 @@ public class CartController {
     }
 
     @PostMapping("/{idCustomer}/carts/stocks/{idStock}")
+    @PreAuthorize("authentication.principal.idCustomer == #idCustomer")
     public ResponseEntity<CartWithCartItemDto> postProductToCart(
             @PathVariable Long idCustomer,
             @PathVariable Long idStock) {
@@ -100,6 +102,7 @@ public class CartController {
     }
 
     @GetMapping("/{idCustomer}/carts")
+    @PreAuthorize("authentication.principal.idCustomer == #idCustomer")
     public ResponseEntity<CartWithCartItemDto> getCartWithItems(@PathVariable Long idCustomer) {
         try {
             CartWithCartItemDto dto = cartService.getCartWithItems(idCustomer); // Only one cart per customer
@@ -135,6 +138,7 @@ public class CartController {
     // when user tap the '+' or '-' icon in cart on spesific cart item it will
     // update the cart item quantity (stock)
     @PatchMapping("/{idCustomer}/carts/stocks/{idStock}")
+    @PreAuthorize("authentication.principal.idCustomer == #idCustomer")
     public ResponseEntity<CartWithCartItemDto> patchCartItem(
             @PathVariable Long idCustomer,
             @PathVariable Long idStock,
@@ -186,6 +190,7 @@ public class CartController {
 
     // when the item quantity (stock) is 0 the item cart will be deleted
     @DeleteMapping("/{idCustomer}/carts/stocks/{idStock}")
+    @PreAuthorize("authentication.principal.idCustomer == #idCustomer")
     public ResponseEntity<CartWithCartItemDto> deleteCartItem(
             @PathVariable Long idCustomer,
             @PathVariable Long idStock) {

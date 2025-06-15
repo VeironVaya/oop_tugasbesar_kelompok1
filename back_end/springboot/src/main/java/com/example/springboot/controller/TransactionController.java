@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ public class TransactionController {
     }
 
     @PostMapping("/customers/{idCustomer}/checkout")
+    @PreAuthorize("authentication.principal.idCustomer == #idCustomer")
     public ResponseEntity<TransactionResponseDetailDto> checkout(
             @PathVariable Long idCustomer) {
         try {
@@ -102,6 +104,7 @@ public class TransactionController {
     }
 
     @GetMapping("/customers/{idCustomer}/transactions")
+    @PreAuthorize("authentication.principal.idCustomer == #idCustomer")
     public ResponseEntity<List<TransactionResponseDetailDto>> getCustomerTransactions(
             @PathVariable Long idCustomer) {
         List<TransactionResponseDetailDto> list = transactionService.getTransactionsByCustomer(idCustomer);
@@ -110,6 +113,7 @@ public class TransactionController {
 
     // 2) Get one transaction detail for a given customer
     @GetMapping("/customers/{idCustomer}/transactions/{idTransaction}")
+    @PreAuthorize("authentication.principal.idCustomer == #idCustomer")
     public ResponseEntity<TransactionResponseDetailDto> getCustomerTransactionDetail(
             @PathVariable Long idCustomer,
             @PathVariable Long idTransaction) {
@@ -119,6 +123,7 @@ public class TransactionController {
 
     // 3) Admin: list all transactions, or filter by id if provided
     @GetMapping("transactions")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<TransactionResponseDetailDto>> getAllTransactionOptionalSearchById(
             @RequestParam(required = false) Long id) {
         List<TransactionResponseDetailDto> list = transactionService.getAllTransactions(id);
@@ -127,6 +132,7 @@ public class TransactionController {
 
     // 4) Admin: get one transaction by its id
     @GetMapping("transactions/{idTransaction}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TransactionResponseDetailDto> getTransactionDetail(
             @PathVariable Long idTransaction) {
         TransactionResponseDetailDto dto = transactionService.getTransactionDetail(idTransaction);
@@ -135,6 +141,7 @@ public class TransactionController {
 
     // 5) Admin: patch just the paymentStatus field
     @PatchMapping("transactions/{idTransaction}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TransactionResponseDetailDto> patchTransactionPaymentStatus(
             @PathVariable Long idTransaction,
             @RequestParam String paymentStatus) {
