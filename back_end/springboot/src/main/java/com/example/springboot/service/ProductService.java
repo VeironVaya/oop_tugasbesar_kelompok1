@@ -59,6 +59,10 @@ public class ProductService {
             throw new InvalidDataException("Product category cannot be empty");
         }
 
+        if (dto.getUrlimage() == null || dto.getUrlimage().trim().isEmpty()) {
+            throw new InvalidDataException("URL Image cannot be empty");
+        }
+
         Product p = new Product();
         p.setUrlimage(dto.getUrlimage());
         p.setName(dto.getName());
@@ -140,7 +144,7 @@ public class ProductService {
         }
 
         if (dto.getUrlimage() == null || dto.getUrlimage().trim().isEmpty()) {
-            throw new InvalidDataException("Product category cannot be empty");
+            throw new InvalidDataException("URL Image cannot be empty");
         }
 
         List<Stock> stocks = stockRepository.findAllByProduct_IdProduct(id);
