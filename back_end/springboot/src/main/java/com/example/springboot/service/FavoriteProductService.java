@@ -1,23 +1,23 @@
 package com.example.springboot.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.springboot.repository.ProductRepository;
 import com.example.springboot.dto.response.AddRemoveFavoriteResponseDto;
 import com.example.springboot.dto.response.CustomerFavoritesResponseDto;
+import com.example.springboot.dto.response.FavoriteProductResponseDto;
+import com.example.springboot.dto.response.ProductResponseDto;
+import com.example.springboot.entity.Customer;
+import com.example.springboot.entity.FavoriteProduct;
 import com.example.springboot.entity.Product;
 import com.example.springboot.exception.DuplicateFavoriteException;
 import com.example.springboot.exception.ResourceNotFoundException;
-import com.example.springboot.entity.Customer;
-import com.example.springboot.entity.FavoriteProduct;
 import com.example.springboot.repository.CustomerRepository;
 import com.example.springboot.repository.FavoriteProductRepository;
-import com.example.springboot.dto.response.FavoriteProductResponseDto;
-import com.example.springboot.dto.response.ProductResponseDto;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import com.example.springboot.repository.ProductRepository;
 
 @Service
 @Transactional
@@ -74,7 +74,7 @@ public class FavoriteProductService {
 
     public CustomerFavoritesResponseDto getAllFavoritesByCustomer(Long customerId) {
         Customer customer = customerRepository.findById(customerId)
-            .orElseThrow(() -> new ResourceNotFoundException("Customer with ID " + customerId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer with ID " + customerId + " not found"));
 
         List<FavoriteProduct> favorites = favoriteProductRepository.findByCustomer(customer);
 
@@ -87,6 +87,7 @@ public class FavoriteProductService {
             dto.setDescription(product.getDescription());
             dto.setPrice(product.getPrice());
             dto.setCategory(product.getCategory());
+            dto.setUrlimage(product.getUrlimage());
 
             FavoriteProductResponseDto itemDto = new FavoriteProductResponseDto();
             itemDto.setIdFavoriteProduct(fav.getId_favorite_product());
