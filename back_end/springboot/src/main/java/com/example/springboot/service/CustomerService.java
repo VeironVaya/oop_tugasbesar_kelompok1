@@ -20,6 +20,14 @@ public class CustomerService {
     private final PasswordEncoder encoder;
 
     public CustomerResponseDto register(CustomerDto dto) {
+        if (dto.getUsername() == null || dto.getUsername().isBlank()) {
+            throw new InvalidDataException("Username must not be blank");
+        }
+
+        if (dto.getPassword() == null || dto.getPassword().isBlank()) {
+            throw new InvalidDataException("Password must not be blank");
+        }
+
         if (repo.findByUsername(dto.getUsername()).isPresent()) {
             throw new InvalidDataException("Username " + dto.getUsername() + " already exist");
         }

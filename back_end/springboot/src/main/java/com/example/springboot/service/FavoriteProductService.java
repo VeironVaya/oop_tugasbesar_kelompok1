@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.springboot.repository.ProductRepository;
 import com.example.springboot.dto.response.AddRemoveFavoriteResponseDto;
+import com.example.springboot.dto.response.CustomerFavoritesResponseDto;
 import com.example.springboot.entity.Product;
 import com.example.springboot.exception.DuplicateFavoriteException;
 import com.example.springboot.exception.ResourceNotFoundException;
@@ -12,6 +13,11 @@ import com.example.springboot.entity.Customer;
 import com.example.springboot.entity.FavoriteProduct;
 import com.example.springboot.repository.CustomerRepository;
 import com.example.springboot.repository.FavoriteProductRepository;
+import com.example.springboot.dto.response.FavoriteProductResponseDto;
+import com.example.springboot.dto.response.ProductResponseDto;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -64,5 +70,32 @@ public class FavoriteProductService {
         respon.setMessage("remove from favorite success");
         respon.setFavorite(false);
         return respon;
+    }
+
+    public CustomerFavoritesResponseDto getAllFavoritesByCustomer(Long customerId) {
+        Customer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> new ResourceNotFoundException("Customer with ID " + customerId + " not found"));
+
+        List<FavoriteProduct> favorites = favoriteProductRepository.findByCustomer(customer);
+
+        List<FavoriteProductResponseDto> favItems = favorites.stream().map(fav -> {
+            Product product = fav.getProduct();
+
+            ProductResponseDto dto = new ProductResponseDto();
+            dto.setIdProduct(product.getIdProduct());
+            dto.setName(product.getName());
+            dto.setDescription(product.getDescription());
+            dto.setPrice(product.getPrice());
+            dto.setCategory(product.getCategory());
+
+            FavoriteProductResponseDto itemDto = new FavoriteProductResponseDto();
+            itemDto.setIdFavoriteProduct(fav.getId_favorite_product());
+            itemDto.setProduct(dto);
+            return itemDto;
+        }).collect(Collectors.toList());
+        CustomerFavoritesResponseDto res = new CustomerFavoritesResponseDto();
+        res.setIdCustomer(customer.getIdCustomer());
+        res.setFavorites(favItems);
+        return res;
     }
 }

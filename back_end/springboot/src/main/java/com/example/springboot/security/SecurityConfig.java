@@ -83,16 +83,28 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Public Endpoints:
                         .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-admin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/login-customer").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/customers/registration").permitAll()
 
-                        // Role-based Endpoints:
-                        // .requestMatchers("/api/v1/customers/**").hasRole("CUSTOMER")
+                        // Customer Endpoints:
+                        .requestMatchers("/api/v1/customers/**").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/*/customer/*/favorites").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/products/*/customer/*/favorites").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/*/customer/*").hasRole("CUSTOMER")
 
-                        // Sharing Endpoints
+                        // Admin Endpoints:
+                        .requestMatchers(HttpMethod.GET, "/api/v1/transactions").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/transactions/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/transactions/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/*/stocks").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/products/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/products/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/*").hasRole("ADMIN")
 
-                        .anyRequest().permitAll())
+                        .anyRequest().authenticated())
 
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
