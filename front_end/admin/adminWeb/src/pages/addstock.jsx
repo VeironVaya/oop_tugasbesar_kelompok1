@@ -21,7 +21,7 @@ const AddStock = () => {
   useEffect(() => {
     // Check for token first, handle unauthorized access
     if (!token) {
-      setError("Unauthorized. Please log in to manage stock.");
+      // setError("Unauthorized. Please log in to manage stock.");
       setIsLoading(false);
       setTimeout(() => navigate("/login"), 2000);
       return;
@@ -48,8 +48,8 @@ const AddStock = () => {
         console.error("Failed to fetch product", err);
         if (err.response && err.response.status === 401) {
           setError("Your session has expired. Please log in again.");
-          localStorage.removeItem('token');
-          setTimeout(() => navigate('/login'), 2000);
+          localStorage.removeItem("token");
+          setTimeout(() => navigate("/login"), 2000);
         } else {
           setError(
             "Could not find the specified product. Check the console for details."
@@ -86,7 +86,6 @@ const AddStock = () => {
     });
   };
 
-
   // --- LOGIC: Saves stock by either updating an existing one or creating a new one ---
   const handleSave = async () => {
     // Convert quantityToAdd to number for validation
@@ -99,11 +98,11 @@ const AddStock = () => {
 
     const finalSize = sizeInput.trim();
     // Validate finalSize: it should not be empty if a new stock is being created
-    if (!finalSize && !product.stocks.find(s => s.size === finalSize)) {
-        alert("Please enter a size for new stock entries.");
-        return;
-    }
-
+    // if (!finalSize && !product.stocks.find(s => s.size === finalSize)) {
+    //     alert("Please enter a size for new stock entries.");
+    //     return;
+    // }
+    const sizeToSend = finalSize === "" ? "One Size" : finalSize; // jika input size kosong, kirim "One Size"
     const existingStock = product.stocks.find((s) => s.size === finalSize);
 
     // Define headers once to use for both PATCH and POST
@@ -113,32 +112,16 @@ const AddStock = () => {
     };
 
     try {
-      if (existingStock) {
-        // --- LOGIC TO UPDATE EXISTING STOCK ---
-        const newQuantity = existingStock.stockQuantity + numericQuantityToAdd;
-        const apiUrl = `http://localhost:8080/api/v1/products/${productId}/stocks/${existingStock.idStock}`;
-        const payload = { stockQuantity: newQuantity };
+      const apiUrl = `http://localhost:8080/api/v1/products/${productId}/stocks`;
+      const payload = { size: sizeToSend, stockQuantity: numericQuantityToAdd };
 
-        // Add headers to PATCH request
-        await axios.patch(apiUrl, payload, { headers });
-        alert(
-          `Added ${numericQuantityToAdd} to size "${
-            finalSize || "N/A"
-          }". New total: ${newQuantity}.`
-        );
-      } else {
-        // --- LOGIC TO CREATE NEW STOCK ---
-        const apiUrl = `http://localhost:8080/api/v1/products/${productId}/stocks`;
-        const payload = { size: finalSize, stockQuantity: numericQuantityToAdd };
-
-        // Add headers to POST request
-        await axios.post(apiUrl, payload, { headers });
-        alert(
-          `New stock for size "${
-            finalSize || "N/A"
-          }" created with quantity ${numericQuantityToAdd}.`
-        );
-      }
+      // Add headers to POST request
+      await axios.post(apiUrl, payload, { headers });
+      alert(
+        `New stock for size "${
+          sizeToSend || "N/A"
+        }" created with quantity ${numericQuantityToAdd}.`
+      );
       navigate(`/editdetails/${productId}`);
     } catch (err) {
       console.error("Error saving stock:", err);
@@ -152,19 +135,26 @@ const AddStock = () => {
     }
   };
 
-  // --- UI / JSX ---
   if (isLoading) {
     return (
-      <div className="p-6 text-center text-gray-700">Loading product information...</div>
+      <div className="p-6 text-center text-gray-700">
+        Loading product information...
+      </div>
     );
   }
 
   if (error) {
-    return <div className="p-6 text-center text-red-600 font-medium">{error}</div>;
+    return (
+      <div className="p-6 text-center text-red-600 font-medium">{error}</div>
+    );
   }
 
   if (!product) {
-    return <div className="p-6 text-center text-gray-700">No product data available.</div>;
+    return (
+      <div className="p-6 text-center text-gray-700">
+        No product data available.
+      </div>
+    );
   }
 
   return (
@@ -210,11 +200,16 @@ const AddStock = () => {
             placeholder="Enter size (e.g., S, M, L, XL, XXL)"
             className="w-full border-gray-300 border rounded-md px-3 py-2 focus:ring-2 focus:ring-black focus:border-transparent transition duration-150 ease-in-out"
           />
-           <p className="text-xs text-gray-500 mt-1">Leave blank if the product is one-size-fits-all, but if adding new stock for a specific size, you must enter it.</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Leave blank if the product is one-size-fits-all, but if adding new
+            stock for a specific size, you must enter it.
+          </p>
         </div>
 
         <div className="mb-6">
-          <h2 className="font-medium mb-2 text-gray-700 text-sm">Quantity to Add</h2>
+          <h2 className="font-medium mb-2 text-gray-700 text-sm">
+            Quantity to Add
+          </h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={decreaseStock}

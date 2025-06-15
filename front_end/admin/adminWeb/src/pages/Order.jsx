@@ -14,8 +14,10 @@ const Order = () => {
 
   useEffect(() => {
     if (!token) {
-      alert("Unauthorized: Please log in first.");
-      navigate("/login");
+      // alert("Unauthorized: Please log in first.");
+      setIsLoading(false);
+      setTimeout(() => navigate("/login"), 2000);
+      
       return;
     }
 
@@ -80,7 +82,7 @@ const Order = () => {
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Cari ID transaksi (contoh: 1)"
+          placeholder="Search by Transaction ID (e.g., 12345)"
           className="border px-4 py-2 rounded w-full md:w-1/2"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -115,9 +117,9 @@ const Order = () => {
                     <p>Total: Rp {order.totalPrice}</p>
                     <p>Status: {order.paymentStatus}</p>
                     <p>Date: {order.date}</p>
-                    <p>Size: {stock?.size || "N/A"}</p>
+                    {/* <p>Size: {stock?.size || "N/A"}</p> */}
                     <p>Qty: {item?.quantity || "N/A"}</p>
-                    <p>Stock Qty: {stock?.stockQuantity || "N/A"}</p>
+                    {/* <p>Stock Qty: {stock?.stockQuantity || "N/A"}</p> */}
                   </div>
                 </div>
 

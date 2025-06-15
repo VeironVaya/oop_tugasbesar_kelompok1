@@ -1,22 +1,26 @@
-// === src/App.jsx (FIXED) ===
+// === src/App.jsx ===
 
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
-// Impor semua komponen dan halaman Anda
+// Halaman Umum
 import Home from "./pages/Home";
 import Collection from "./pages/Collection";
 import About from "./pages/About";
+import Login from "./pages/Login";
+import Regist from "./pages/Regist";
+import Unauthorized from "./pages/Unauthorized";
+
+// Komponen
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// Halaman Proteksi (Butuh Login)
 import Product from "./pages/Product";
 import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import Login from "./pages/Login";
-import Navbar from "./components/Navbar";
 import Orders from "./pages/Orders";
-import Footer from "./components/Footer";
-import Regist from "./pages/Regist";
-import RequireAuth from "./components/RequireAuth";
-import Unauthorized from "./pages/Unauthorized";
+import Checkout from "./pages/Checkout";
 import MyFavorite from "./pages/MyFavorite";
 
 const App = () => {
@@ -24,26 +28,55 @@ const App = () => {
     <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
       <Navbar />
       <Routes>
-        {/* --- Rute Publik --- */}
+        {/* === Rute Publik === */}
         <Route path="/" element={<Home />} />
         <Route path="/collection" element={<Collection />} />
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/regist" element={<Regist />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/product/:productId" element={<Product />} />
-        <Route path="/my-favorites" element={<MyFavorite />} />
 
-        {/* --- Rute Terproteksi --- */}
-        <Route element={<RequireAuth allowedRoles={["user", "admin"]} />}>
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/orders" element={<Orders />} />
-
-          {/*  DIPERBAIKI: Tambahkan '/' dan pindahkan ke dalam blok ini */}
-          <Route path="/checkout/:transactionId" element={<Checkout />} />
-
-          {/* Tambahkan rute terproteksi lainnya di sini */}
-        </Route>
+        {/* === Rute Proteksi (Butuh Login) === */}
+        <Route
+          path="/product/:productId"
+          element={
+            <ProtectedRoute>
+              <Product />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout/:transactionId"
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-favorites"
+          element={
+            <ProtectedRoute>
+              <MyFavorite />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
       <Footer />
     </div>

@@ -1,3 +1,5 @@
+// === src/pages/Product.jsx (UPDATED with Multiple Sizes Support) ===
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShop } from "../context/ShopContext";
@@ -15,6 +17,10 @@ const Product = () => {
   const [productData, setProductData] = useState(null);
   const [favorited, setFavorited] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [availableSizes, setAvailableSizes] = useState([]);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedStockId, setSelectedStockId] = useState(null);
 
   useEffect(() => {
     if (!user) {
@@ -35,24 +41,32 @@ const Product = () => {
         const data = res.data;
 
         if (data) {
-          const stock = data.stocks?.[0] || {};
           const imageUrl =
             data.urlimage && data.urlimage.trim() !== ""
               ? data.urlimage
               : "https://placehold.co/600x600/e0e0e0/777?text=No+Img";
 
+          const sizes = data.stocks || [];
+
           setProductData({
             id: data.idProduct,
-            stockId: stock.idStock,
             name: data.name,
             description: data.description,
             category: data.category,
             price: data.price,
             isFavorite: data.isFavorite,
-            size: stock.size || "-",
-            stockQuantity: stock.stockQuantity || 0,
             image: imageUrl,
+            stockQuantity: sizes.reduce(
+              (acc, s) => acc + (s.stockQuantity || 0),
+              0
+            ),
           });
+
+          setAvailableSizes(sizes);
+          if (sizes.length > 0) {
+            setSelectedSize(sizes[0].size);
+            setSelectedStockId(sizes[0].idStock);
+          }
 
           setFavorited(data.isFavorite || false);
         } else {
@@ -80,10 +94,15 @@ const Product = () => {
     setFavorited(!favorited);
   };
 
+  const handleSizeSelect = (size, stockId) => {
+    setSelectedSize(size);
+    setSelectedStockId(stockId);
+  };
+
   const handleAddToCart = async () => {
-    if (!productData) return;
+    if (!productData || !selectedStockId) return;
     try {
-      await addToCart(productData.stockId, productData.size);
+      await addToCart(selectedStockId, selectedSize);
       navigate("/cart");
     } catch (err) {
       console.error("Gagal add to cart:", err);
@@ -143,18 +162,25 @@ const Product = () => {
 
           <div className="my-6">
             <p className="text-sm font-medium text-gray-700">Size</p>
-            <div className="flex gap-2 mt-2">
-              <button
-                disabled
-                className="py-2 px-4 border border-orange-500 bg-orange-100 text-orange-600 text-sm rounded"
-              >
-                {productData.size}
-              </button>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {availableSizes.map((stock) => (
+                <button
+                  key={stock.idStock}
+                  onClick={() => handleSizeSelect(stock.size, stock.idStock)}
+                  className={`py-2 px-4 border rounded text-sm transition-colors ${
+                    selectedSize === stock.size
+                      ? "bg-orange-500 text-white border-orange-600"
+                      : "bg-white text-orange-600 border-orange-400"
+                  }`}
+                >
+                  {stock.size}
+                </button>
+              ))}
             </div>
           </div>
 
           <p className="text-sm text-gray-600 mb-4">
-            Stock: {productData.stockQuantity}
+            Total Stock: {productData.stockQuantity}
           </p>
 
           <button

@@ -7,11 +7,15 @@ const Add = () => {
 
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
-  const [productCategory, setProductCategory] = useState("Topware");
+  const [productCategory, setProductCategory] = useState("Topwear");
   const [productPrice, setProductPrice] = useState("");
   const [size, setSize] = useState("");
   const [stockQuantity, setStockQuantity] = useState("");
   const [imageUrl, setImageUrl] = useState(""); // State for the image URL
+
+  // Cloudinary Configuration
+  const cloudinaryCloudName = "dim14penk"; // Replace with your Cloudinary Cloud Name
+  const cloudinaryUploadPreset = "assetPBO"; // Replace with your unsigned upload preset name
 
   // Handler for stock quantity input, ensures only numbers
   const handleQuantityChange = (e) => {
@@ -29,6 +33,39 @@ const Add = () => {
     setProductPrice(value);
   };
 
+  // --- Cloudinary Upload Handler ---
+  const openCloudinaryWidget = () => {
+    if (window.cloudinary) {
+      const widget = window.cloudinary.createUploadWidget(
+        {
+          cloudName: cloudinaryCloudName,
+          uploadPreset: cloudinaryUploadPreset,
+          sources: ["local", "url", "camera", "google_drive"], // Customize allowed sources
+          folder: "product_images", // Optional: specify a folder in Cloudinary
+          // You can add more options here, e.g., transformations, tags
+        },
+        (error, result) => {
+          if (!error && result && result.event === "success") {
+            console.log(
+              "Done uploading!!! Here is the image info: ",
+              result.info
+            );
+            setImageUrl(result.info.secure_url); // Set the URL from Cloudinary
+            alert("Image uploaded successfully!");
+          } else if (error) {
+            console.error("Cloudinary upload error:", error);
+            alert("Image upload failed. Please try again.");
+          }
+        }
+      );
+      widget.open(); // Open the widget
+    } else {
+      alert(
+        "Cloudinary widget script not loaded. Please check your index.html."
+      );
+    }
+  };
+
   // Handles the form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,9 +77,9 @@ const Add = () => {
       !productPrice ||
       !size.trim() ||
       !stockQuantity ||
-      !imageUrl.trim() // Validate the new image URL field
+      !imageUrl.trim() // Ensure imageUrl is not empty after upload
     ) {
-      alert("Please fill out all fields.");
+      alert("Please fill out all fields, including uploading an image.");
       return;
     }
 
@@ -89,6 +126,16 @@ const Add = () => {
     } catch (error) {
       console.error("Error adding product:", error);
       let errorMessage = "Failed to add product. Please try again.";
+
+      // --- START: HANYA TAMBAH BLOCK INI ---
+      if (error.response && error.response.status === 401) {
+        errorMessage = "Sesi Anda telah berakhir. Mohon login kembali."; // Pesan khusus untuk 401
+        localStorage.removeItem("token"); // Hapus token yang tidak valid
+        navigate("/login"); // Redirect ke halaman login
+        return; // Hentikan eksekusi selanjutnya
+      }
+      // --- END: HANYA TAMBAH BLOCK INI ---
+
       if (error.response) {
         // Extract a more specific error message from the server response
         errorMessage = `Error: ${
@@ -105,25 +152,43 @@ const Add = () => {
         onSubmit={handleSubmit}
         className="w-full max-w-4xl bg-white p-10 rounded-lg shadow-md"
       >
-        {/* Image URL Input Field */}
+        <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
+          Add New Product
+        </h2>
+
+        {/* Image Upload Section */}
         <div className="mb-4">
-          <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
-            Product Image URL
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Product Image
           </label>
-          <input
-            type="url" // Use type="url" for better browser validation for URLs
-            id="imageUrl"
-            placeholder="https://example.com/image.jpg"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-black focus:border-black transition duration-150 ease-in-out"
-            required
-          />
+          <button
+            type="button" // Important: type="button" to prevent form submission
+            onClick={openCloudinaryWidget}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Upload Image
+          </button>
+          {imageUrl && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600 mb-2">Image Preview:</p>
+              <img
+                src={imageUrl}
+                alt="Product Preview"
+                className="max-w-xs max-h-48 mx-auto border border-gray-300 rounded-md shadow-sm"
+              />
+              <p className="text-xs text-gray-500 mt-2 break-all">
+                URL: {imageUrl}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Product Name */}
         <div className="mb-4">
-          <label htmlFor="productName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="productName"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Product Name
           </label>
           <input
@@ -139,7 +204,10 @@ const Add = () => {
 
         {/* Product Description */}
         <div className="mb-4">
-          <label htmlFor="productDescription" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="productDescription"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Product Description
           </label>
           <textarea
@@ -155,7 +223,10 @@ const Add = () => {
         {/* Category and Price */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label htmlFor="productCategory" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="productCategory"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Product Category
             </label>
             <select
@@ -164,14 +235,17 @@ const Add = () => {
               onChange={(e) => setProductCategory(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-black focus:border-black transition duration-150 ease-in-out"
             >
-              <option>Topware</option>
-              <option>Bottomware</option>
+              <option>Topwear</option>
+              <option>Bottomwear</option>
               <option>Accessories</option>
               <option>Footwear</option>
             </select>
           </div>
           <div>
-            <label htmlFor="productPrice" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="productPrice"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Product Price
             </label>
             <input
@@ -191,7 +265,7 @@ const Add = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <label
-              htmlFor="sizeInput"
+              htmlB="sizeInput"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Product Size
@@ -229,9 +303,9 @@ const Add = () => {
         {/* Submit Button */}
         <button
           type="submit"
-          className="w-32 bg-black text-white py-2 rounded-md hover:bg-gray-800 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+          className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
         >
-          ADD
+          ADD PRODUCT
         </button>
       </form>
     </div>

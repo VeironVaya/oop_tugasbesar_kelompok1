@@ -113,7 +113,11 @@ const Login = () => {
           disabled={status === "loading" || status === "success"}
           className={`w-full text-white py-2 rounded transition-colors duration-300 ${
             status === "success" ? "bg-green-500" : "bg-black"
-          } ${status === "loading" || status === "success" ? "cursor-not-allowed" : ""}`}
+          } ${
+            status === "loading" || status === "success"
+              ? "cursor-not-allowed"
+              : ""
+          }`}
         >
           {getButtonText()}
         </button>

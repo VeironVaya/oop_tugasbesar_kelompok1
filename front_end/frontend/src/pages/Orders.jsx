@@ -1,5 +1,3 @@
-// === src/pages/Orders.jsx (Tampilan Disesuaikan) ===
-
 import React, { useState, useEffect } from "react";
 import { useShop } from "../context/ShopContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -11,7 +9,6 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Ambil data transaksi saat user tersedia
   useEffect(() => {
     if (!user?.id) {
       setLoading(false);
@@ -33,7 +30,6 @@ const Orders = () => {
     fetchTransactions();
   }, [user]);
 
-  // Handler pembatalan pesanan
   const handleCancelClick = async (transactionId) => {
     if (
       window.confirm(
@@ -67,24 +63,11 @@ const Orders = () => {
             className="border-b py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
           >
             <div className="flex items-center gap-4">
-              <img
-                src={
-                  order.productImage && order.productImage.trim() !== ""
-                    ? order.productImage
-                    : "https://placehold.co/100x150/e0e0e0/777?text=No+Img"
-                }
-                alt={order.productName || "Order image"}
-                className="w-20 h-24 object-cover rounded"
-                onError={(e) => {
-                  if (
-                    e.currentTarget.src !==
-                    "https://placehold.co/100x150/e0e0e0/777?text=No+Img"
-                  ) {
-                    e.currentTarget.src =
-                      "https://placehold.co/100x150/e0e0e0/777?text=No+Img";
-                  }
-                }}
-              />
+              {/* 🔁 Ganti gambar dengan ikon box 📦 */}
+              <div className="w-20 h-24 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-600 text-xs">
+                <span className="text-2xl">📦</span>
+                <span>Order</span>
+              </div>
 
               <div>
                 <p className="font-semibold">{order.productName}</p>

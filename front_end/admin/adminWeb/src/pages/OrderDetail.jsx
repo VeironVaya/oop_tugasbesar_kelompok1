@@ -14,11 +14,11 @@ const OrderDetail = () => {
 
   useEffect(() => {
     if (!token) {
-      // Use a custom modal or message box instead of alert()
-      // For now, retaining alert() as per the previous pattern, but it's a candidate for improvement.
-      alert("Unauthorized: Please log in first.");
-      navigate("/login");
+      // alert("Unauthorized: Please log in first.");
+      setIsLoading(false);
+      setTimeout(() => navigate("/login"), 2000);
       return;
+      
     }
 
     const fetchOrderDetail = async () => {
@@ -31,11 +31,12 @@ const OrderDetail = () => {
             },
           }
         );
+        // The API response directly gives us the order object, so we set it directly
+        // The 'data' field of the response contains the actual transaction object
         setOrder(res.data);
       } catch (error) {
-        console.error("Gagal mengambil detail transaksi:", error);
-        // Use a custom modal or message box instead of alert()
-        alert("Tidak dapat mengambil data transaksi.");
+        console.error("Failed to load transaction data:", error);
+        alert("Cannot load transaction data.");
       } finally {
         setLoading(false);
       }
@@ -44,9 +45,9 @@ const OrderDetail = () => {
     fetchOrderDetail();
   }, [id, navigate, token]);
 
-  if (loading) return <p className="p-6 text-gray-700">Memuat data transaksi...</p>;
+  if (loading) return <p className="p-6 text-gray-700">Loading transaction data...</p>;
   if (!order)
-    return <p className="p-6 text-red-500">Transaksi tidak ditemukan.</p>;
+    return <p className="p-6 text-red-500">There is no transaction.</p>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white shadow-md rounded-lg font-sans">
@@ -57,29 +58,33 @@ const OrderDetail = () => {
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
         </svg>
-        Kembali ke daftar pesanan
+        Back to Orders
       </button>
 
       <h2 className="text-xl font-semibold mb-3 text-gray-800">
-        ID Transaksi: {order.idTransaction}
+        Transaction ID: {order.idTransaction}
       </h2>
       <p className="mb-2 text-gray-700">
-        <span className="font-semibold">Status Pembayaran:</span>{" "}
-        {order.paymentStatus} {/* Display status as text */}
+        <span className="font-semibold">Payment Status:</span>{" "}
+        {order.paymentStatus}
       </p>
 
       <p className="mb-4 text-gray-700">
-        <span className="font-semibold">Tanggal Pesanan:</span>{" "}
+        <span className="font-semibold">Order Date:</span>{" "}
         {order.date}
       </p>
 
-      <h3 className="text-lg font-semibold mb-3 text-gray-800">Item Transaksi:</h3>
+      <h3 className="text-lg font-semibold mb-3 text-gray-800">Items:</h3>
       {order.transactionItems && order.transactionItems.length > 0 ? (
         order.transactionItems.map((item, idx) => {
-          const stock = item.stock || {};
-          // Assuming product details are nested under stock or a similar structure within transactionItems
-          const productName = item.product?.name || "N/A"; // Access product name
-          const productImageUrl = item.product?.urlimage || "https://via.placeholder.com/80"; // Access product image URL
+          // Adjusting access paths based on your JSON response
+          const productName = item.name || "N/A";
+          // Use 'urlimage' directly from the item, provide a placeholder if null
+          const productImageUrl = item.urlimage || "https://via.placeholder.com/80";
+          const itemSize = item.size || "N/A";
+          // Your JSON doesn't provide stockQuantity for the item, so it will be N/A.
+          // If you need stock quantity, your backend should include it in 'transactionItems'.
+          const stockQuantity = "N/A"; // As per the provided JSON, stockQuantity is not available directly on transactionItems
 
           return (
             <div
@@ -94,9 +99,9 @@ const OrderDetail = () => {
               />
               <div className="flex-1 text-gray-700">
                 <p className="font-semibold text-lg">{productName}</p>
-                <p className="text-sm">Ukuran: {stock.size || "N/A"}</p>
-                <p className="text-sm">Jumlah: {item.quantity}</p>
-                <p className="text-sm">Stok Tersisa: {stock.stockQuantity ?? "N/A"}</p>
+                <p className="text-sm">Size: {itemSize}</p>
+                <p className="text-sm">Quantity: {item.quantity}</p>
+                
               </div>
               <p className="font-bold text-lg text-right text-gray-900">
                 Subtotal: Rp.{item.totalPrice?.toLocaleString("id-ID")}
@@ -105,11 +110,11 @@ const OrderDetail = () => {
           );
         })
       ) : (
-        <p className="text-gray-500 italic">Tidak ada item dalam transaksi ini.</p>
+        <p className="text-gray-500 italic">There is no items in this transaction.</p>
       )}
 
       <p className="mt-6 font-bold text-xl text-gray-900 border-t pt-4 border-gray-200">
-        Total Pembayaran: Rp.{order.totalPrice?.toLocaleString("id-ID")}
+        Total: Rp.{order.totalPrice?.toLocaleString("id-ID")}
       </p>
     </div>
   );
