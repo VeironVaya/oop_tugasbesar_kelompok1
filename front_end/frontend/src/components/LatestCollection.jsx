@@ -41,7 +41,11 @@ const LatestCollection = () => {
             id={item.idProduct}
             name={item.name}
             price={item.price}
-            image={item.image || "/default.jpg"}
+            image={
+              item.urlimage && item.urlimage.trim() !== ""
+                ? item.urlimage
+                : "https://placehold.co/100x100/e0e0e0/777?text=No+Img"
+            }
           />
         ))}
       </div>
