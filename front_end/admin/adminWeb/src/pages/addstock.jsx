@@ -5,34 +5,56 @@ import axios from "axios";
 const AddStock = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
+  // Get the token from local storage
+  const token = localStorage.getItem("token");
 
   // State for product data, loading, and errors
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // State for the form
+  // State for the form inputs
   const [sizeInput, setSizeInput] = useState("");
-  const [quantityToAdd, setQuantityToAdd] = useState(0);
+  const [quantityToAdd, setQuantityToAdd] = useState(""); // Initialize as empty string to allow controlled input
 
-  // --- Fetch product data ---
+  // --- LOGIC: Fetch product data ---
   useEffect(() => {
+    // Check for token first, handle unauthorized access
+    if (!token) {
+      setError("Unauthorized. Please log in to manage stock.");
+      setIsLoading(false);
+      setTimeout(() => navigate("/login"), 2000);
+      return;
+    }
+
     const fetchProduct = async () => {
       const apiUrl = `http://localhost:8080/api/v1/products/${productId}`;
       console.log("Fetching product from URL:", apiUrl);
 
       try {
-        const response = await axios.get(apiUrl);
+        // Add Authorization header to the GET request
+        const response = await axios.get(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const productData = response.data;
+        // Ensure stocks array exists, even if empty
         if (!productData.stocks) {
           productData.stocks = [];
         }
         setProduct(productData);
       } catch (err) {
         console.error("Failed to fetch product", err);
-        setError(
-          "Could not find the specified product. Check the console for details."
-        );
+        if (err.response && err.response.status === 401) {
+          setError("Your session has expired. Please log in again.");
+          localStorage.removeItem('token');
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          setError(
+            "Could not find the specified product. Check the console for details."
+          );
+        }
       } finally {
         setIsLoading(false);
       }
@@ -41,56 +63,82 @@ const AddStock = () => {
     if (productId) {
       fetchProduct();
     }
-  }, [productId]);
+  }, [productId, token, navigate]);
 
-  const increaseStock = () => setQuantityToAdd((prev) => prev + 1);
-  const decreaseStock = () =>
-    setQuantityToAdd((prev) => (prev > 0 ? prev - 1 : 0));
+  // --- Handlers for quantity input ---
+  const handleQuantityInput = (e) => {
+    // Allow only digits
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    setQuantityToAdd(value);
+  };
 
-  // --- Saves stock by either updating an existing one or creating a new one ---
+  const increaseStock = () => {
+    setQuantityToAdd((prev) => {
+      const num = parseInt(prev, 10);
+      return isNaN(num) ? 1 : num + 1; // Start from 1 if current is not a number
+    });
+  };
+
+  const decreaseStock = () => {
+    setQuantityToAdd((prev) => {
+      const num = parseInt(prev, 10);
+      return isNaN(num) || num <= 0 ? 0 : num - 1; // Don't go below 0
+    });
+  };
+
+
+  // --- LOGIC: Saves stock by either updating an existing one or creating a new one ---
   const handleSave = async () => {
-    // MODIFIED: Removed the constraint for the size input.
-    if (!product || quantityToAdd <= 0) {
+    // Convert quantityToAdd to number for validation
+    const numericQuantityToAdd = parseInt(quantityToAdd, 10);
+
+    if (!product || isNaN(numericQuantityToAdd) || numericQuantityToAdd <= 0) {
       alert("Please specify a quantity greater than zero.");
       return;
     }
 
-    // Use a trimmed version of the size or a default for "no size"
     const finalSize = sizeInput.trim();
+    // Validate finalSize: it should not be empty if a new stock is being created
+    if (!finalSize && !product.stocks.find(s => s.size === finalSize)) {
+        alert("Please enter a size for new stock entries.");
+        return;
+    }
+
     const existingStock = product.stocks.find((s) => s.size === finalSize);
+
+    // Define headers once to use for both PATCH and POST
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
 
     try {
       if (existingStock) {
         // --- LOGIC TO UPDATE EXISTING STOCK ---
-        const newQuantity = existingStock.stockQuantity + quantityToAdd;
+        const newQuantity = existingStock.stockQuantity + numericQuantityToAdd;
         const apiUrl = `http://localhost:8080/api/v1/products/${productId}/stocks/${existingStock.idStock}`;
         const payload = { stockQuantity: newQuantity };
 
-        console.log("Updating existing stock at URL:", apiUrl);
-        console.log("With payload:", payload);
-
-        await axios.patch(apiUrl, payload);
+        // Add headers to PATCH request
+        await axios.patch(apiUrl, payload, { headers });
         alert(
-          `Added ${quantityToAdd} to size "${
+          `Added ${numericQuantityToAdd} to size "${
             finalSize || "N/A"
           }". New total: ${newQuantity}.`
         );
       } else {
         // --- LOGIC TO CREATE NEW STOCK ---
         const apiUrl = `http://localhost:8080/api/v1/products/${productId}/stocks`;
-        const payload = { size: finalSize, stockQuantity: quantityToAdd };
+        const payload = { size: finalSize, stockQuantity: numericQuantityToAdd };
 
-        console.log("Creating new stock at URL:", apiUrl);
-        console.log("With payload:", payload);
-
-        await axios.post(apiUrl, payload);
+        // Add headers to POST request
+        await axios.post(apiUrl, payload, { headers });
         alert(
           `New stock for size "${
             finalSize || "N/A"
-          }" created with quantity ${quantityToAdd}.`
+          }" created with quantity ${numericQuantityToAdd}.`
         );
       }
-
       navigate(`/editdetails/${productId}`);
     } catch (err) {
       console.error("Error saving stock:", err);
@@ -104,23 +152,23 @@ const AddStock = () => {
     }
   };
 
-  // --- Conditional Rendering ---
+  // --- UI / JSX ---
   if (isLoading) {
     return (
-      <div className="p-6 text-center">Loading product information...</div>
+      <div className="p-6 text-center text-gray-700">Loading product information...</div>
     );
   }
 
   if (error) {
-    return <div className="p-6 text-center text-red-600">{error}</div>;
+    return <div className="p-6 text-center text-red-600 font-medium">{error}</div>;
   }
 
   if (!product) {
-    return <div className="p-6 text-center">No product data available.</div>;
+    return <div className="p-6 text-center text-gray-700">No product data available.</div>;
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 max-w-3xl mx-auto font-sans">
       <Link
         to={`/editdetails/${productId}`}
         className="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center mb-6"
@@ -142,34 +190,35 @@ const AddStock = () => {
         Back to Detail Product
       </Link>
 
-      <div className="border rounded-lg p-6 shadow-sm">
-        <h1 className="text-xl font-bold mb-2">
+      <div className="border border-gray-200 rounded-lg p-6 shadow-md bg-white">
+        <h1 className="text-2xl font-bold mb-4 text-gray-800">
           Add Stock for: {product.name}
         </h1>
 
         <div className="mb-6">
           <label
             htmlFor="sizeInput"
-            className="font-medium mb-2 text-gray-700 block"
+            className="font-medium mb-2 text-gray-700 block text-sm"
           >
-            Product Size (Optional)
+            Product Size
           </label>
           <input
             id="sizeInput"
             type="text"
             value={sizeInput}
             onChange={(e) => setSizeInput(e.target.value)}
-            placeholder="Enter size (e.g., S, M, L) or leave blank"
-            className="w-full border-gray-300 border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter size (e.g., S, M, L, XL, XXL)"
+            className="w-full border-gray-300 border rounded-md px-3 py-2 focus:ring-2 focus:ring-black focus:border-transparent transition duration-150 ease-in-out"
           />
+           <p className="text-xs text-gray-500 mt-1">Leave blank if the product is one-size-fits-all, but if adding new stock for a specific size, you must enter it.</p>
         </div>
 
         <div className="mb-6">
-          <h2 className="font-medium mb-2 text-gray-700">Quantity to Add</h2>
+          <h2 className="font-medium mb-2 text-gray-700 text-sm">Quantity to Add</h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={decreaseStock}
-              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"
+              className="p-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-black"
             >
               <svg
                 className="w-5 h-5"
@@ -186,17 +235,16 @@ const AddStock = () => {
               </svg>
             </button>
             <input
-              type="number"
+              type="text" // Change to text to allow custom input handling
+              inputMode="numeric" // Suggests numeric keyboard on mobile
               min="0"
               value={quantityToAdd}
-              onChange={(e) =>
-                setQuantityToAdd(parseInt(e.target.value, 10) || 0)
-              }
-              className="w-24 text-center border-gray-300 border rounded-md px-2 py-1 text-lg font-bold focus:ring-2 focus:ring-blue-500"
+              onChange={handleQuantityInput} // Use the new handler
+              className="w-24 text-center border-gray-300 border rounded-md px-2 py-1 text-lg font-bold focus:ring-2 focus:ring-black focus:border-transparent transition duration-150 ease-in-out"
             />
             <button
               onClick={increaseStock}
-              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"
+              className="p-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-black"
             >
               <svg
                 className="w-5 h-5"
@@ -218,7 +266,7 @@ const AddStock = () => {
         <div className="flex justify-end mt-8">
           <button
             onClick={handleSave}
-            className="bg-black text-white px-8 py-2 rounded-lg font-bold hover:bg-gray-800 transition-colors"
+            className="bg-black text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-800 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
           >
             Save Stock
           </button>
