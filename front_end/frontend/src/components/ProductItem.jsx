@@ -1,23 +1,30 @@
+// === src/components/ProductItem.jsx ===
 import React from "react";
-import { useShop } from "../context/ShopContext";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const ProductItem = ({ id, image, name, price }) => {
-  const { currency } = useShop();
+const ProductItem = ({ id, name, price, image }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/product/${id}`);
+  };
+
   return (
-    <Link className="text-gray-700 cursor-pointer" to={`/product/${id}`}>
-      <div className="overflow-hidden">
-        <img
-          className="hover:scale-110 transition ease-in-out"
-          src={Array.isArray(image) ? image[0] : image}
-          alt=""
-        />
+    <div
+      className="border rounded-md overflow-hidden shadow hover:shadow-lg transition cursor-pointer"
+      onClick={handleClick}
+    >
+      <img
+        src={image || "/default.jpg"}
+        alt={name}
+        className="w-full h-48 object-cover"
+      />
+      <div className="p-3">
+        <h3 className="font-semibold text-sm mb-1">{name}</h3>
+        <p className="text-sm text-gray-700">Rp {price.toLocaleString()}</p>
       </div>
-      <p className="pt-3 pb-1 text-sm">{name}</p>
-      <p className="text-sm font-medium">
-        {currency}{price}
-      </p>
-    </Link>
+    </div>
   );
 };
+
 export default ProductItem;

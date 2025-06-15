@@ -1,158 +1,155 @@
-import React, { useContext, useEffect, useState } from "react";
+// === src/pages/Product.jsx (FIXED) ===
+
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ShopContext } from "../context/ShopContext";
+import { useShop } from "../context/ShopContext"; // ✅ UBAH: Gunakan hook useShop
+import api from "../api/axiosConfig"; // ✅ TAMBAH: Impor instance api kita
 import { assets } from "../assets/assets";
 
-const currency = "$";
+const currency = "Rp";
 
 const Product = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const {
-    products,
-    addToCart,
-    user,
-    favoriteItems,
-    addToFavorites,
-    removeFromFavorites,
-  } = useContext(ShopContext);
+
+  // ✅ UBAH: Ambil data dari useShop. setSelectedProductId tidak lagi dipakai di sini.
+  const { user, addToCart, addToFavorites, removeFromFavorites } = useShop();
 
   const [productData, setProductData] = useState(null);
-  const [image, setImage] = useState("");
-  const [size, setSize] = useState("");
   const [favorited, setFavorited] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // ✅ UBAH: Logika utama untuk memuat data produk digabung dan disederhanakan
   useEffect(() => {
-    // Redirect ke login jika user belum login
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    if (products.length > 0) {
-      const product = products.find((item) => item._id === productId);
-      if (product) {
-        setProductData(product);
-        setImage(product.image[0]);
-        setSize("");
-
-        // Cek apakah produk sudah difavoritkan
-        const isFavorited = favoriteItems.some(
-          (item) => item._id === product._id
-        );
-        setFavorited(isFavorited);
-      } else {
-        setProductData(null);
+    // Hapus effect yang me-redirect, karena sudah ditangani oleh RequireAuth
+    const loadProduct = async () => {
+      // Pastikan ada productId dan user yang sudah login (dengan ID yang valid)
+      if (!productId || !user?.id) {
+        setLoading(false);
+        return;
       }
-    }
-  }, [productId, products, user, navigate, favoriteItems]);
+
+      setLoading(true);
+      try {
+        // ✅ UBAH: Gunakan 'api.get' dan 'user.id' yang benar
+        const res = await api.get(
+          `/products/${productId}/customer/${user.id}`
+        );
+
+        const data = res.data;
+
+        if (data) { // Cukup periksa apakah data ada
+          const stock = data.stocks?.[0] || {};
+          setProductData({
+            id: data.idProduct,
+            stockId: stock.idStock,
+            name: data.name,
+            description: data.description,
+            category: data.category,
+            price: data.price,
+            isFavorite: data.isFavorite,
+            size: stock.size || "-",
+            stockQuantity: stock.stockQuantity || 0,
+            image: "/default.jpg", // Ganti dengan data.image dari API jika ada
+          });
+          setFavorited(data.isFavorite || false);
+        } else {
+          console.error("Produk gagal dimuat:", data.message);
+          setProductData(null);
+        }
+      } catch (err) {
+        console.error("Error fetch product:", err);
+        setProductData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [productId, user]); // Jalankan effect jika productId atau user berubah
 
   const handleFavoriteToggle = () => {
+    if (!productData) return;
     if (favorited) {
-      removeFromFavorites(productData._id);
+      removeFromFavorites(productData.id);
     } else {
       addToFavorites(productData);
     }
     setFavorited(!favorited);
   };
 
-  if (!productData) {
-    return <div className="p-10 text-center">Loading product...</div>;
-  }
+  const handleAddToCart = async () => {
+    if (!productData) return;
+    try {
+      // Pastikan fungsi addToCart di context Anda menerima argumen yang sesuai
+      await addToCart(productData.stockId, productData.size);
+      navigate("/cart");
+    } catch (err) {
+      console.error("Gagal add to cart:", err);
+    }
+  };
 
+  if (loading) return <div className="text-center p-6">Loading product...</div>;
+  if (!productData)
+    return (
+      <div className="text-center text-red-500 p-6">Produk tidak ditemukan atau gagal dimuat.</div>
+    );
+
+  // Bagian JSX di bawah ini tidak perlu diubah
   return (
-    <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex gap-12 sm:gap-12 flex-col sm:flex-row">
-        {/* ------- Product Images ------- */}
-        <div className="flex-1 flex flex-col-reverse gap-3 sm:flex-row">
-          <div className="flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full">
-            {productData.image.map((img, index) => (
-              <img
-                src={img}
-                key={index}
-                className="w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer border rounded hover:opacity-80"
-                onClick={() => setImage(img)}
-                alt={`Thumbnail ${index + 1}`}
-              />
-            ))}
-          </div>
-
-          {/* ---------- Gambar Utama + Ikon favorite ---------- */}
-          <div className="w-full sm:w-[80%] relative">
-            <button
-              onClick={handleFavoriteToggle}
-              className="absolute top-4 right-4 z-10 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
-            >
-              <img
-                src={favorited ? assets.heartfill_icon : assets.heart_icon}
-                alt="Love"
-                className="w-5 h-5"
-              />
-            </button>
+    <div className="max-w-7xl mx-auto px-4 pt-10 border-t-2">
+      <div className="flex flex-col sm:flex-row gap-8">
+        <div className="flex-1 relative">
+          <button
+            onClick={handleFavoriteToggle}
+            className="absolute top-4 right-4 bg-white p-2 rounded-full shadow"
+          >
             <img
-              className="w-full h-auto rounded-md"
-              src={image}
-              alt="Product"
+              src={favorited ? assets.heartfill_icon : assets.heart_icon}
+              alt="Favorite"
+              className="w-5 h-5"
             />
-          </div>
+          </button>
+          <img
+            src={productData.image}
+            alt={productData.name}
+            className="w-full rounded-md border"
+          />
         </div>
 
-        {/* ------- Product Info -------- */}
         <div className="flex-1">
-          <div className="text-xs mb-2 inline-block bg-gray-200 px-2 py-1 rounded uppercase tracking-widest font-medium">
-            {productData.subCategory}
+          <div className="text-xs bg-gray-200 inline-block px-2 py-1 rounded uppercase font-medium">
+            {productData.category}
           </div>
 
-          <h1 className="font-medium text-2xl mt-2">{productData.name}</h1>
-          {/* <div className="flex items-center gap-1 mt-2">
-            <img src={assets.star_icon} alt="star" className="w-4" />
-            <img src={assets.star_icon} alt="star" className="w-4" />
-            <img src={assets.star_icon} alt="star" className="w-4" />
-            <img src={assets.star_icon} alt="star" className="w-4" />
-            <img src={assets.star_dull_icon} alt="star dull" className="w-4" />
-            <p className="pl-2 text-sm text-gray-500">(122)</p>
-          </div> */}
-          <p className="mt-5 text-3xl font-semibold">
-            {currency}
-            {productData.price}
-          </p>
-          <p className="mt-5 text-gray-600 md:w-4/5 leading-relaxed">
-            {productData.description}
+          <h1 className="text-2xl font-semibold mt-2">{productData.name}</h1>
+          <p className="text-3xl mt-4 font-bold">
+            {currency} {productData.price.toLocaleString()}
           </p>
 
-          <div className="flex flex-col gap-4 my-8">
-            <p className="text-sm font-medium">Select Size</p>
-            <div className="flex gap-2">
-              {productData.sizes.map((s, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSize(s)}
-                  className={`py-2 px-4 rounded-none text-sm border transition-all duration-300 ${
-                    s === size
-                      ? "border-orange-500 bg-orange-100 text-orange-600"
-                      : "border-gray-300 text-gray-700"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
+          <p className="mt-4 text-gray-700">{productData.description}</p>
+
+          <div className="my-6">
+            <p className="text-sm font-medium">Size</p>
+            <div className="flex gap-2 mt-2">
+              <button
+                disabled
+                className="py-2 px-4 border border-orange-500 bg-orange-100 text-orange-600 text-sm rounded"
+              >
+                {productData.size}
+              </button>
             </div>
           </div>
 
-          <p className="text-sm mb-6 text-gray-600">
-            Stock: {productData.stock ?? 0}
+          <p className="text-sm text-gray-600 mb-4">
+            Stock: {productData.stockQuantity}
           </p>
 
           <button
-            onClick={() => addToCart(productData._id, size)}
-            disabled={!size}
-            className={`px-8 py-3 text-sm rounded font-medium ${
-              size
-                ? "bg-black text-white hover:bg-gray-800 transition"
-                : "bg-gray-300 text-white cursor-not-allowed"
-            }`}
+            onClick={handleAddToCart}
+            className="px-6 py-3 bg-black text-white text-sm rounded"
           >
-            {size ? "ADD TO CART" : "SELECT SIZE FIRST"}
+            ADD TO CART
           </button>
         </div>
       </div>
