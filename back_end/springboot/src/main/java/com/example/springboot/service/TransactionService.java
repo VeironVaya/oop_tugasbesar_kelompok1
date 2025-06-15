@@ -67,7 +67,7 @@ public class TransactionService {
         TransactionHistory txn = new TransactionHistory();
         txn.setCustomer(cust);
         txn.setDate(LocalDate.now());
-        txn.setPaymentStatus("Unpayed");
+        txn.setPaymentStatus("Unpaid");
         txn.setTotalPrice(0d);
         txn = txnRepo.save(txn);
 
