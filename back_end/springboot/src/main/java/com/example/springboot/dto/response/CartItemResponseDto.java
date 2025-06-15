@@ -13,6 +13,7 @@ public class CartItemResponseDto {
     private String urlimage;
     private Double price;
     private String category;
+    private String size;
     private int stockQuantity;
     private int itemQuantity;
 }

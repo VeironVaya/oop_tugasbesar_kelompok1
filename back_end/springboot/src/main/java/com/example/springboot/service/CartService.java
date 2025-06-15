@@ -117,12 +117,14 @@ public class CartService {
         String name = ci.getStock().getProduct().getName();
         String description = ci.getStock().getProduct().getDescription();
         Double price = ci.getStock().getProduct().getPrice();
+        String size = ci.getStock().getSize();
         String category = ci.getStock().getProduct().getCategory();
         String urlimage = ci.getStock().getProduct().getUrlimage();
 
         ciDto.setName(name);
         ciDto.setDescription(description);
         ciDto.setPrice(price);
+        ciDto.setSize(size);
         ciDto.setCategory(category);
         ciDto.setUrlimage(urlimage);
 
