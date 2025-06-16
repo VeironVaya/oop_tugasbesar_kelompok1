@@ -62,6 +62,7 @@ export const ShopProvider = ({ children }) => {
           description: item.description,
           category: item.category,
           stockQuantity: item.stockQuantity,
+          size: item.size,
           image: item.urlimage || "/default.jpg", // ✅ inilah perbaikannya
         }));
         setCartItems(mappedItems);

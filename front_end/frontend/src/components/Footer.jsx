@@ -7,8 +7,10 @@ const Footer = () => {
       <div className='flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-sm'>
 
         <div>
-          <img className='mb-5 w-32' src={assets.logo} alt="" />
-          <p className='w-full md:w-2/3 text-gray-600'>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+          <img className='mb-5 w-32' src={assets.logo} alt="STYLOW Logo" />
+          <p className='w-full md:w-2/3 text-gray-600'>
+            Stylow (Stylish Low Budget) adalah aplikasi web e-commerce yang dikembangkan sebagai tugas besar mata kuliah Pemrograman Berorientasi Objek (PBO). Aplikasi ini menyediakan platform belanja daring yang mudah diakses, terutama untuk produk fashion dan kebutuhan sehari-hari dengan harga terjangkau.
+          </p>
         </div>
 
         <div>
@@ -20,12 +22,13 @@ const Footer = () => {
           </ul>
         </div>
 
-
       </div>
 
       <div>
         <hr />
-        <p className='py-5 text-sm text-center'>Copyright 2024@ forever.com - All Right Reserved.</p>
+        <p className='py-5 text-sm text-center'>
+          Copyright 2024@ forever.com - All Right Reserved.
+        </p>
       </div>
 
     </div>

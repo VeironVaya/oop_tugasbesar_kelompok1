@@ -1,5 +1,3 @@
-// === src/pages/Product.jsx (UPDATED with Multiple Sizes Support) ===
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShop } from "../context/ShopContext";
@@ -12,7 +10,8 @@ const Product = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
 
-  const { user, addToCart, addToFavorites, removeFromFavorites } = useShop();
+  // Ambil cartItems untuk mengetahui jumlah di keranjang
+  const { user, addToCart, addToFavorites, removeFromFavorites, cartItems } = useShop();
 
   const [productData, setProductData] = useState(null);
   const [favorited, setFavorited] = useState(false);
@@ -56,10 +55,6 @@ const Product = () => {
             price: data.price,
             isFavorite: data.isFavorite,
             image: imageUrl,
-            stockQuantity: sizes.reduce(
-              (acc, s) => acc + (s.stockQuantity || 0),
-              0
-            ),
           });
 
           setAvailableSizes(sizes);
@@ -121,6 +116,15 @@ const Product = () => {
       </div>
     );
 
+  // Cari stok untuk size terpilih
+  const currentStock =
+    availableSizes.find((s) => s.idStock === selectedStockId)?.stockQuantity || 0;
+  // Cari quantity yang sudah ada di keranjang untuk stock ini
+  const inCartQty =
+    cartItems.find((item) => item.stockId === selectedStockId)?.quantity || 0;
+  // disable jika stok habis atau di keranjang sudah maksimal
+  const disableAdd = currentStock === 0 || inCartQty >= currentStock;
+
   return (
     <div className="max-w-7xl mx-auto px-4 pt-10 border-t-2">
       <div className="flex flex-col sm:flex-row gap-8">
@@ -167,10 +171,15 @@ const Product = () => {
                 <button
                   key={stock.idStock}
                   onClick={() => handleSizeSelect(stock.size, stock.idStock)}
+                  disabled={stock.stockQuantity === 0}
                   className={`py-2 px-4 border rounded text-sm transition-colors ${
                     selectedSize === stock.size
                       ? "bg-orange-500 text-white border-orange-600"
                       : "bg-white text-orange-600 border-orange-400"
+                  } ${
+                    stock.stockQuantity === 0
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
                 >
                   {stock.size}
@@ -180,12 +189,17 @@ const Product = () => {
           </div>
 
           <p className="text-sm text-gray-600 mb-4">
-            Total Stock: {productData.stockQuantity}
+            Stock : {currentStock}
           </p>
 
           <button
             onClick={handleAddToCart}
-            className="px-6 py-3 bg-black text-white text-sm rounded hover:bg-gray-800 transition-colors"
+            disabled={disableAdd}
+            className={`px-6 py-3 text-sm rounded transition-colors ${
+              disableAdd
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "bg-black text-white hover:bg-gray-800"
+            }`}
           >
             ADD TO CART
           </button>
