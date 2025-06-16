@@ -118,9 +118,9 @@ const AddStock = () => {
       // Add headers to POST request
       await axios.post(apiUrl, payload, { headers });
       alert(
-        `New stock for size "${
+        `Stock for size "${
           sizeToSend || "N/A"
-        }" created with quantity ${numericQuantityToAdd}.`
+        }" updated with quantity ${numericQuantityToAdd}.`
       );
       navigate(`/editdetails/${productId}`);
     } catch (err) {
